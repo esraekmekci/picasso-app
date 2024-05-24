@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'discover.dart';
 import 'daily.dart';
 import 'favorites.dart';
 import 'artist.dart';
 import 'museum.dart';
 import 'style.dart';
+import 'login.dart';
+import 'signup.dart';
+import 'filter.dart';
 
-void main() {
+Future <void> main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
   runApp(const PicassoApp());
 }
 
@@ -16,14 +25,17 @@ class PicassoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const ArtDetailsPage(),
+      home:  LoginPage(),
       routes: {
+        '/login': (context) =>  LoginPage(),
+        '/signup': (context) =>  SignUpPage(),
         '/daily': (context) => const ArtDetailsPage(),
         '/discover': (context) => const DiscoverPage(),
         '/favorites': (context) => const FavoritesPage(),
         '/artist': (context) => const ArtistPage(),
         '/museum': (context) => const MuseumPage(),
         '/style': (context) => const StylePage(),
+        '/filter': (context) => const FilterPage(),
       },
     );
   }

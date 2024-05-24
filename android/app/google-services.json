@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "575277623254",
+    "project_id": "picasso-app-8af58",
+    "storage_bucket": "picasso-app-8af58.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:575277623254:android:d9f85c1ac597e99dad6677",
+        "android_client_info": {
+          "package_name": "com.example.picasso"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiEI0ZQPRmuC_tzSucBKlUD_IzPus0_1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

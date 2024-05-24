@@ -1,0 +1,28 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "picasso-app-8af58",
+          "appId": "1:575277623254:android:d9f85c1ac597e99dad6677",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "picasso-app-8af58",
+          "configurations": {
+            "android": "1:575277623254:android:d9f85c1ac597e99dad6677",
+            "ios": "1:575277623254:ios:5ec3bf004c1e9b6aad6677",
+            "macos": "1:575277623254:ios:5ec3bf004c1e9b6aad6677",
+            "web": "1:575277623254:web:8e3feb8aea8c424cad6677",
+            "windows": "1:575277623254:web:8f1a6b2bbc934ff5ad6677"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "singleProjectMode": true
+  }
+}

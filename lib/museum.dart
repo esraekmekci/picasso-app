@@ -81,7 +81,7 @@ class MuseumPage extends StatelessWidget {
                     crossAxisSpacing: 10.0,
                     mainAxisSpacing: 10.0,
                     shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     children: List.generate(6, (index) {
                       return GestureDetector(
                         onTap: () {
