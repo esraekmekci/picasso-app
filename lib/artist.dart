@@ -49,12 +49,6 @@ class ArtistPage extends StatelessWidget {
         title: const Text('Artist'),
         backgroundColor: Colors.grey[300],
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
       ),
       body: SingleChildScrollView(
         child: Column(

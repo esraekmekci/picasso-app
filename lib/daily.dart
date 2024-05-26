@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
-class ArtDetailsPage extends StatelessWidget {
+class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
+  @override
+  _ArtDetailsPageState createState() => _ArtDetailsPageState();
+}
+
+
+class _ArtDetailsPageState extends State<ArtDetailsPage> {
+  int _currentIndex = 1; // Set the default index to 1 for "Daily"
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daily Main Page'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
@@ -88,17 +90,23 @@ class ArtDetailsPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
         onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites');
-              break;
+          if (index != _currentIndex) { // Check if the current index is different
+            setState(() {
+              _currentIndex = index;
+            });
+            switch (index) {
+              case 0:
+                Navigator.pushNamed(context, '/discover');
+                break;
+              case 1:
+                Navigator.pushNamed(context, '/daily');
+                break;
+              case 2:
+                Navigator.pushNamed(context, '/favorites');
+                break;
+            }
           }
         },
         items: const [

@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
-class DiscoverPage extends StatelessWidget {
+class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
+  @override
+  _DiscoverPageState createState() => _DiscoverPageState();
+}
+
+
+class _DiscoverPageState extends State<DiscoverPage> {
+  int _currentIndex = 0; // Set the default index to 0 for "Discover"
+
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +18,8 @@ class DiscoverPage extends StatelessWidget {
         title: const Text('Discover'),
         backgroundColor: Colors.white,
         elevation: 0,
-        
+        automaticallyImplyLeading: false,
+
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -55,17 +64,23 @@ class DiscoverPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
         onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites');
-              break;
+          if (index != _currentIndex) { // Check if the current index is different
+            setState(() {
+              _currentIndex = index;
+            });
+            switch (index) {
+              case 0:
+                Navigator.pushNamed(context, '/discover');
+                break;
+              case 1:
+                Navigator.pushNamed(context, '/daily');
+                break;
+              case 2:
+                Navigator.pushNamed(context, '/favorites');
+                break;
+            }
           }
         },
         items: const [
