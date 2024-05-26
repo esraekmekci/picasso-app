@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
-class MuseumPage extends StatelessWidget {
+class MuseumPage extends StatefulWidget {
   const MuseumPage({super.key});
+  @override
+    _MuseumPageState createState() => _MuseumPageState();
+  }
+
+  class _MuseumPageState extends State<MuseumPage> {
+    bool _isLiked = false; // Boolean to manage like button state
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +32,26 @@ class MuseumPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Louvre Museum',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
+                    children: [
+                      const Text(
+                        'Louvre Museum',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                        IconButton(
+                          icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                          color: Colors.red,
+                          onPressed: () {
+                            setState(() {
+                              _isLiked = !_isLiked; // Toggle the like state
+                            });
+                          },
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   const Text(

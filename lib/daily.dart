@@ -9,22 +9,37 @@ class ArtDetailsPage extends StatefulWidget {
 
 class _ArtDetailsPageState extends State<ArtDetailsPage> {
   int _currentIndex = 1; // Set the default index to 1 for "Daily"
+  bool _isLiked = false; // Boolean to manage like button state
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(30.0),
         child: ListView(
           children: [
             Image.asset('assets/dream.png'),
             const SizedBox(height: 10),
-            const Text(
-              'Le Rêve (The Dream)',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
+              children: [
+                const Text(
+                  'Le Rêve (The Dream)',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                  color: Colors.red,
+                  onPressed: () {
+                    setState(() {
+                      _isLiked = !_isLiked; // Toggle the like state
+                    });
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 10),
             Row(

@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
-class ArtistPage extends StatelessWidget {
+class ArtistPage extends StatefulWidget {
   const ArtistPage({super.key});
+  @override
+    _ArtistPageState createState() => _ArtistPageState();
+  }
+
+
+  class _ArtistPageState extends State<ArtistPage> {
+    bool _isLiked = false; // Boolean to manage like button state
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,13 +73,27 @@ class ArtistPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Pablo Picasso',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
+                    children: [
+                      const Text(
+                        'Pablo Picasso',
+                          style: TextStyle(
+                           fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                          IconButton(
+                          icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                          color: Colors.red,
+                          onPressed: () {
+                            setState(() {
+                              _isLiked = !_isLiked; // Toggle the like state
+                            });
+                          },
+                        )
+                    ]
+                  ) ,
                   const SizedBox(height: 10),
                   const Text(
                     '25 Oct. 1881 - 8 April 1973',
