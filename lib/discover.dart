@@ -22,6 +22,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(5.0),
         child: Column(
           children: [
             Padding(
