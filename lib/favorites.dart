@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -12,18 +14,12 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Favorites'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
             _buildProfileHeader(), // New method to build the profile header
-            _buildSection(title: 'Your Artworks', itemCount: 10),
+            _buildSection(title: 'Favorite Artworks', itemCount: 10),
             _buildSection(title: 'Favorite Artists', itemCount: 8),
             _buildSection(title: 'Favorite Museums', itemCount: 5),
           ],
@@ -33,37 +29,59 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  Widget _buildProfileHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      child: const Row(
-        children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Placeholder image
-          ),
-          SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+Widget _buildProfileHeader() {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return SizedBox();
+
+  return FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.done) {
+        var userData = snapshot.data?.data() as Map<String, dynamic>?;  // Safe access using '?.'
+        if (userData != null) {  // Check if userData is not null before using it
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Row(
               children: [
-                Text(
-                  'Username',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                CircleAvatar(
+                  radius: 40,
+                  backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Placeholder image
                 ),
-                Text('user@example.com'), // Example email
+                SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userData['username'], // Display the username
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      Text(userData['email']), // Display the email
+                    ],
+                  ),
+                )
               ],
             ),
-          )
-        ],
-      ),
-    );
-  }
+          );
+        } else {
+          return Text("No user data available");
+        }
+      } else if (snapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      } else {
+        return Text("Unable to load user data");
+      }
+    },
+  );
+}
+
+
 
   Widget _buildSection({required String title, required int itemCount}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        SizedBox(height: 15),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
