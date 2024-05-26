@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class SignUpPage extends StatelessWidget {
   final TextEditingController _nameController = TextEditingController();
@@ -115,13 +117,29 @@ class SignUpPage extends StatelessWidget {
                           email: _emailController.text.trim(),
                           password: _passwordController.text.trim(),
                         );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Successfully registered')),
-                        );
-                        // Navigate to the login page after showing success message
-                        Future.delayed(const Duration(seconds: 2), () {
-                          Navigator.pushNamed(context, '/login');
-                        });
+
+                        if (userCredential.user != null) {
+                          // it's safe to access userCredential.user.uid because we checked that user is not null
+                          await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+                            'username': _nameController.text.trim(),
+                            'email': _emailController.text.trim()
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Successfully registered')),
+                          );
+
+                          // Navigate to the login page after showing success message
+                          Future.delayed(const Duration(seconds: 2), () {
+                            Navigator.pushNamed(context, '/login');
+                          });
+                        } else {
+                          // Handle the case where the user is null, which means the user was not created
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to register user')),
+                          );
+                        }
+
                       } on FirebaseAuthException catch (e) {
                         if (e.code == 'email-already-in-use') {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +156,7 @@ class SignUpPage extends StatelessWidget {
                         );
                       }
                     },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(vertical: 16),
