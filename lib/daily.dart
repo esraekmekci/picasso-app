@@ -19,7 +19,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
   }
 
   Future<Map<String, dynamic>> getArtworkDetails() async {
-    final DateTime now = DateTime.now().toUtc().add(const Duration(hours: 3)); // Adjust for UTC+3
+    final DateTime now = DateTime.now();
     final DateTime startOfDay = DateTime(now.year, now.month, now.day, 0, 0, 0).toUtc();
     final DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59, 999).toUtc();
 
