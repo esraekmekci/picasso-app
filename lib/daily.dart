@@ -11,6 +11,7 @@ class ArtDetailsPage extends StatefulWidget {
 
 class _ArtDetailsPageState extends State<ArtDetailsPage> {
   late Future<Map<String, dynamic>>? artworkData;
+  bool _isLiked = false;  // Boolean to manage like button state
 
   @override
   void initState() {
@@ -112,8 +113,8 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                   padding: const EdgeInsets.all(15),
                   child: Column(
                     children: [
-                      SizedBox(height: 10),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             data['name'],
@@ -121,6 +122,15 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
+                          ),
+                          IconButton(
+                            icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                            color: Colors.red,
+                            onPressed: () {
+                              setState(() {
+                                _isLiked = !_isLiked; // Toggle the like state
+                              });
+                            },
                           ),
                         ],
                       ),
