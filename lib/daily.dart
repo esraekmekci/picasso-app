@@ -3,14 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
+
   @override
   _ArtDetailsPageState createState() => _ArtDetailsPageState();
 }
 
 class _ArtDetailsPageState extends State<ArtDetailsPage> {
-  int _currentIndex = 1; // Set the default index to 1 for "Daily"
-  bool _isLiked = false; // Boolean to manage like button state
-  late Future<Map<String, dynamic>>? artworkData; // Future to hold the artwork data including artist's name
+  late Future<Map<String, dynamic>>? artworkData;
 
   @override
   void initState() {
@@ -20,13 +19,14 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
 
   Future<Map<String, dynamic>> getArtworkDetails() async {
     final DateTime now = DateTime.now();
-    final DateTime startOfDay = DateTime(now.year, now.month, now.day, 0, 0, 0).toUtc();
-    final DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59, 999).toUtc();
+    final DateTime startOfToday = DateTime(now.year, now.month, now.day);
+    final DateTime endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
 
     var snapshot = await FirebaseFirestore.instance
         .collection('artworks')
-        .where('publishdate', isGreaterThanOrEqualTo: startOfDay)
-        .where('publishdate', isLessThanOrEqualTo: endOfDay)
+        .where('publishdate', isGreaterThanOrEqualTo: startOfToday)
+        .where('publishdate', isLessThanOrEqualTo: endOfToday)
+        .orderBy('publishdate')
         .limit(1)
         .get();
 
@@ -36,19 +36,33 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
 
     DocumentSnapshot artwork = snapshot.docs.first;
     Map<String, dynamic> artworkInfo = artwork.data() as Map<String, dynamic>;
-    DocumentReference artistRef = artworkInfo['artist'];
+    DocumentReference artistRef = artworkInfo['artist'] as DocumentReference;
+    DocumentReference movementRef = (artworkInfo['movement'] as List).first as DocumentReference;
+    DocumentReference museumRef = artworkInfo['museum'] as DocumentReference;
 
     DocumentSnapshot artistSnapshot = await artistRef.get();
-    artworkInfo['artistName'] = artistSnapshot.exists
-        ? (artistSnapshot.data() as Map<String, dynamic>)['name']
-        : 'Unknown Artist';
+    DocumentSnapshot movementSnapshot = await movementRef.get();
+    DocumentSnapshot museumSnapshot = await museumRef.get();
 
-    return artworkInfo;
+    return {
+      'image': artworkInfo['image'],
+      'name': artworkInfo['name'],
+      'year': artworkInfo['year'],
+      'description': artworkInfo['description'],
+      'artist': (artistSnapshot.data() as Map<String, dynamic>)['name'],
+      'movement': (movementSnapshot.data() as Map<String, dynamic>)['name'],
+      'museum': (museumSnapshot.data() as Map<String, dynamic>)['name'],
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Daily Artwork'),
+        backgroundColor: Colors.grey[300],
+        elevation: 0,
+      ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: artworkData,
         builder: (context, snapshot) {
@@ -64,55 +78,66 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
 
           Map<String, dynamic> data = snapshot.data!;
           return Padding(
-            padding: const EdgeInsets.all(30.0),
+            padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                Image.network(data['image']),
-                const SizedBox(height: 10),
-                Container(
-                  color: Colors.grey[200],
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            data['name'],
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-                            color: Colors.red,
-                            onPressed: () {
-                              setState(() {
-                                _isLiked = !_isLiked;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/artist');
-                        },
-                        child: Chip(
-                          label: Text(data['artistName']), // Display the artist's name from the future
-                          backgroundColor: Colors.green[100],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        data['description'],
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                Image.asset(data['image']),
+                SizedBox(height: 10),
+                Text(
+                  data['name'],
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, '/artist', arguments: data['artist']),
+                      child: Chip(
+                        label: Text(data['artist']),
+                        backgroundColor: Colors.green[100],
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      data['year'],
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Text(
+                  data['description'],
+                  style: TextStyle(fontSize: 16),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                    child: Chip(
+                      label: Text(data['museum']),
+                      backgroundColor: Colors.green[100],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movement']),
+                  child: Chip(
+                    label: Text(data['movement']),
+                    backgroundColor: Colors.green[100],
+                  ),
+                ),
+                  ],
                 ),
               ],
             ),
@@ -120,23 +145,17 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
         onTap: (index) {
-          if (index != _currentIndex) {
-            setState(() {
-              _currentIndex = index;
-            });
-            switch (index) {
-              case 0:
-                Navigator.pushNamed(context, '/discover');
-                break;
-              case 1:
-                Navigator.pushNamed(context, '/daily');
-                break;
-              case 2:
-                Navigator.pushNamed(context, '/favorites');
-                break;
-            }
+          switch (index) {
+            case 0:
+              Navigator.pushNamed(context, '/discover');
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/daily');
+              break;
+            case 2:
+              Navigator.pushNamed(context, '/favorites');
+              break;
           }
         },
         items: const [
