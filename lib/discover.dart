@@ -13,18 +13,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Discover'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-
-      ),
+    return Scaffold( 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(5.0),
         child: Column(
           children: [
+            SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(children: [Expanded(
@@ -102,36 +96,37 @@ class _DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
-  Widget _buildSection({required String title, required int itemCount}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
+Widget _buildSection({required String title, required int itemCount}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(height: 20),  // Add a consistent top margin before each title
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        
-        
-        SizedBox(
-          height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              return Container(
-                width: 140,
-                margin: const EdgeInsets.all(8),
-                color: Colors.grey[300],
-                alignment: Alignment.center,
-                child: Text('$title ${index + 1}'),
-              );
-            },
-          ),
+      ),
+      
+      SizedBox(
+        height: 180,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            return Container(
+              width: 140,
+              margin: const EdgeInsets.all(8),
+              color: Colors.grey[300],
+              alignment: Alignment.center,
+              child: Text('$title ${index + 1}'),
+            );
+          },
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
+
 }
