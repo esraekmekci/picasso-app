@@ -23,15 +23,16 @@ class LoginPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Picaßo!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                // const Text(
+                //   'Picaßo!',
+                //   textAlign: TextAlign.center,
+                //   style: TextStyle(
+                //     fontSize: 48,
+                //     fontWeight: FontWeight.bold,
+                //     color: Colors.white,
+                //   ),
+                // ),
+                Image.asset('assets/picaßo.png'),
                 const SizedBox(height: 50),
                 TextField(
                   controller: _emailController,

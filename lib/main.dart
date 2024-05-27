@@ -32,10 +32,29 @@ class PicassoApp extends StatelessWidget {
         '/daily': (context) => const ArtDetailsPage(),
         '/discover': (context) => const DiscoverPage(),
         '/favorites': (context) => const FavoritesPage(),
-        '/artist': (context) => const ArtistPage(),
-        '/museum': (context) => const MuseumPage(),
-        '/movement': (context) => const MovementPage(),
         '/filter': (context) => const FilterPage(),
+      },
+      onGenerateRoute: (RouteSettings settings) {
+        if (settings.name == '/artist') {
+          final args = settings.arguments as Map<String, dynamic>? ?? {};
+          return MaterialPageRoute(
+            builder: (context) => ArtistPage(artistData: args),
+          );
+        }
+        if (settings.name == '/museum') {
+          final args = settings.arguments as Map<String, dynamic>? ?? {};
+          return MaterialPageRoute(
+            builder: (context) => MuseumPage(museumData: args),
+          );
+        }
+        if (settings.name == '/movement') {
+          final args = settings.arguments as Map<String, dynamic>? ?? {};
+          return MaterialPageRoute(
+            builder: (context) => MovementPage(movementData: args),
+          );
+        }
+        // Add more generated routes here
+        return null;  // Returning null will cause onUnknownRoute to be called
       },
     );
   }

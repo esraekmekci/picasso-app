@@ -1,73 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:picasso/appbar.dart';
+import 'expandable_text.dart';
 
 class ArtistPage extends StatefulWidget {
-  const ArtistPage({super.key});
+  final dynamic artistData;
+  const ArtistPage({super.key, required this.artistData});
+
   @override
-    _ArtistPageState createState() => _ArtistPageState();
-  }
+  _ArtistPageState createState() => _ArtistPageState();
+}
 
-
-  class _ArtistPageState extends State<ArtistPage> {
-    bool _isLiked = false; // Boolean to manage like button state
-
-
+class _ArtistPageState extends State<ArtistPage> {
+  bool _isLiked = false; // Boolean to manage like button state
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        children: [
-          _buildFirstPage(context),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.panorama_horizontal_select_rounded),
-            label: 'Daily',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-        ],
-      ),
+    DateTime birthDate = DateTime.fromMillisecondsSinceEpoch(
+      widget.artistData['birthdate'].seconds * 1000,
     );
-  }
+    DateTime deathDate = DateTime.fromMillisecondsSinceEpoch(
+      widget.artistData['deathdate'].seconds * 1000,
+    );
 
-  Widget _buildFirstPage(BuildContext context) {
+    // Format the DateTime to a readable string
+    String formattedBirthDate = DateFormat('dd MMM yyyy').format(birthDate);
+    String formattedDeathDate = DateFormat('dd MMM yyyy').format(deathDate);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Artist'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-      ),
+      appBar: CustomAppBar(),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Image.asset(
-              'assets/picasso.jpg',
-              width: double.infinity,
-              height: 300,
-              fit: BoxFit.cover,
-            ),
+            Image.asset(widget.artistData['image'], width: double.infinity, height: 300, fit: BoxFit.cover),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -76,52 +40,34 @@ class ArtistPage extends StatefulWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
                     children: [
-                      const Text(
-                        'Pablo Picasso',
-                          style: TextStyle(
-                           fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                      Text(
+                        widget.artistData['name'],
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                          IconButton(
-                          icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-                          color: Colors.red,
-                          onPressed: () {
-                            setState(() {
-                              _isLiked = !_isLiked; // Toggle the like state
-                            });
-                          },
-                        )
-                    ]
-                  ) ,
+                      IconButton(
+                        icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                        color: Colors.red,
+                        onPressed: () {
+                          setState(() {
+                            _isLiked = !_isLiked; // Toggle the like state
+                          });
+                        },
+                      )
+                    ],
+                  ),
                   const SizedBox(height: 10),
-                  const Text(
-                    '25 Oct. 1881 - 8 April 1973',
-                    style: TextStyle(
+                  Text(
+                    '$formattedBirthDate - $formattedDeathDate',
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Pablo Ruiz Picasso was a Spanish painter, sculptor, printmaker, ceramicist, and theatre designer who spent most of his adult life in France.',
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () {
-                      // Handle "Read more" action here
-                    },
-                    child: const Text(
-                      'Read more',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
+                  ExpandableTextWidget(text: widget.artistData['description']),
                   const SizedBox(height: 20),
                   const Text(
                     'Artworks',
@@ -154,6 +100,36 @@ class ArtistPage extends StatefulWidget {
           ],
         ),
       ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushNamed(context, '/discover');
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/daily');
+              break;
+            case 2:
+              Navigator.pushNamed(context, '/favorites');
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Discover',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.panorama_horizontal_select_rounded),
+            label: 'Daily',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+        ],
+      )
     );
   }
 }

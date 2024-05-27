@@ -1,57 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:picasso/appbar.dart';
+import 'expandable_text.dart';
 
-class MovementPage extends StatelessWidget {
-  const MovementPage({super.key});
+class MovementPage extends StatefulWidget {
+  final dynamic movementData;
+  const MovementPage({super.key, required this.movementData});
+
+    @override
+    _MovementPageState createState() => _MovementPageState();
+}
+
+class _MovementPageState extends State<MovementPage> {
+  bool _isLiked = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cubism'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-      ),
+      appBar: CustomAppBar(),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Image.asset(
-              'assets/cubism.webp', // Add your image asset here
-              width: double.infinity,
-              height: 300,
-              fit: BoxFit.cover,
-            ),
+            Image.asset(widget.movementData['image'], width: double.infinity, height: 300, fit: BoxFit.cover),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Cubism',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Cubism is an early-20th-century avant-garde art movement that revolutionized European painting and sculpture, and inspired related artistic movements in music, literature, and architecture.',
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () {
-                      // Define the "Read more" action here
-                    },
-                    child: const Text(
-                      'Read more',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
+                    children: [
+                      Text(
+                        widget.movementData['name'],
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                      IconButton(
+                        icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
+                        color: Colors.red,
+                        onPressed: () {
+                          setState(() {
+                            _isLiked = !_isLiked; // Toggle the like state
+                          });
+                        },
+                      )
+                    ],
                   ),
+                  const SizedBox(height: 10),
+                  ExpandableTextWidget(text: widget.movementData['description']),
                   const SizedBox(height: 20),
                   const Text(
                     'Artworks',
@@ -68,7 +65,7 @@ class MovementPage extends StatelessWidget {
                     children: List.generate(6, (index) {
                       return GestureDetector(
                         onTap: () {
-                          // Define what happens when an artwork is tapped
+                          // Handle artwork tap here
                         },
                         child: Card(
                           child: Container(
