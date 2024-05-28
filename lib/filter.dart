@@ -138,14 +138,84 @@ class _FilterPageState extends State<FilterPage> {
     return buildFilterTile('City', cities, () {});
   }
 
-  void applyFilters() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ResultsPage(selectedFilters),
-      ),
-    );
+void applyFilters() async {
+  Query query = FirebaseFirestore.instance.collection('artworks');
+
+  // Define period year ranges
+  Map<String, List<int>> periodYearRanges = {
+    '1800s': [1800, 1899],
+    '1900s': [1900, 1999],
+    '2000s': [2000, 2099]
+  };
+
+  //Filter by periods as year ranges, if any
+  List<int> yearRange = [];
+  for (var period in selectedFilters.where((f) => periods.contains(f)).toList()) {
+    if (periodYearRanges.containsKey(period)) {
+      yearRange.addAll([periodYearRanges[period]![0], periodYearRanges[period]![1]]);
+    }
   }
+  print(yearRange);
+  if (yearRange.isNotEmpty) {
+    query = query.where('year', isGreaterThanOrEqualTo: yearRange.first, isLessThanOrEqualTo: yearRange.last);
+  }
+
+  // Filter by selected movements, if any
+  if (selectedFilters.any((f) => movements.contains(f))) {
+    // Fetch movement document references based on selected movement names
+    var movementSnapshot = await FirebaseFirestore.instance.collection('movements')
+      .where('name', whereIn: selectedFilters.where((f) => movements.contains(f)).toList())
+      .get();
+    List<DocumentReference> movementReferences = movementSnapshot.docs.map((doc) => doc.reference).toList();
+
+    // Apply the movement filter using array-contains-any (ensure you do not exceed 10 references)
+    if (movementReferences.isNotEmpty && movementReferences.length <= 10) {
+      query = query.where('movement', arrayContainsAny: movementReferences);
+    } else {
+      // Handle the case where more than 10 references are selected
+      // This could be logging an error, informing the user, or splitting the query
+    }
+  }
+
+
+  if (selectedCountry != null) {
+    // Fetch museum document references in the selected country
+    var museumSnapshot = await FirebaseFirestore.instance.collection('museums')
+      .where('country', isEqualTo: selectedCountry)
+      .get();
+    List<DocumentReference> museumReferences = museumSnapshot.docs.map((doc) => doc.reference).toList();
+
+    // Narrow down to museums in the selected cities, if any
+    List<String> selectedCities = selectedFilters.where((f) => countryCityMap[selectedCountry]?.contains(f) ?? false).toList();
+    if (selectedCities.isNotEmpty) {
+      museumSnapshot = await FirebaseFirestore.instance.collection('museums')
+        .where('country', isEqualTo: selectedCountry)
+        .where('city', whereIn: selectedCities)
+        .get();
+      museumReferences = museumSnapshot.docs.map((doc) => doc.reference).toList();
+    }
+
+    if (museumReferences.isNotEmpty) {
+      query = query.where('museum', whereIn: museumReferences);
+    }
+  }
+
+  // Execute the query
+  var snapshot = await query.get();
+  List<String> filteredArtworkNames = snapshot.docs.map((doc) {
+    var data = doc.data();
+    return data is Map<String, dynamic> ? data['name'] as String? : null;
+  }).where((name) => name != null).cast<String>().toList();
+
+  // Navigate to the results page with the filtered artworks
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ResultsPage(filteredArtworkNames),
+    ),
+  );
+}
+
 }
 
 class ResultsPage extends StatelessWidget {
