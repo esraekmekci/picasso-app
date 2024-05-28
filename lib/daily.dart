@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
-import 'package:picasso/appbar.dart'; // Ensure you have the intl package installed
+import 'package:intl/intl.dart'; // Ensure you have the intl package installed
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
@@ -14,11 +13,12 @@ class ArtDetailsPage extends StatefulWidget {
 class _ArtDetailsPageState extends State<ArtDetailsPage> {
   late PageController _pageController;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
+  int _currentIndex = 1;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0); // Start from today's artwork
+    _pageController = PageController(initialPage: 7); // Start from today's artwork
     artworkDataList = getArtworks();
   }
 
@@ -68,7 +68,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
       }
     }
 
-    return artworks; // No need to reverse the list
+    return artworks.reversed.toList(); // Reverse the list to show today first
   }
 
   Future<void> toggleFavorite(String artworkId) async {
@@ -114,7 +114,12 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
+      appBar: AppBar(
+        title: Text('Daily Artwork'),
+        backgroundColor: Colors.grey[300],
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: artworkDataList,
         builder: (context, snapshot) {
@@ -154,7 +159,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    Image.asset(data['image']),
+                    Image.network(data['image']),
                     SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
@@ -251,8 +256,17 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+    Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: (index) {
+        if (index != _currentIndex) {
+          setState(() {
+            _currentIndex = index;
+          });
           switch (index) {
             case 0:
               Navigator.pushNamed(context, '/discover');
@@ -261,25 +275,25 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
               Navigator.pushNamed(context, '/daily');
               break;
             case 2:
-              Navigator.pushNamed(context, '/favorites');
+              Navigator.pushNamed(context, '/favorites'); // Assuming '/favorites' is the route for this page
               break;
           }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.panorama_horizontal_select_rounded),
-            label: 'Daily',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-        ],
-      ),
+        }
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.search),
+          label: 'Discover',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.panorama_horizontal_select_rounded),
+          label: 'Daily',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite),
+          label: 'Favorites',
+        ),
+      ],
     );
   }
 }

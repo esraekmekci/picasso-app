@@ -23,13 +23,13 @@ class _LoginPageState extends State<LoginPage> {
         ),
         child: Stack(
           children: [
+            Image.asset('assets/picaßo.png'),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Image.asset('assets/picaßo.png'),
                   const SizedBox(height: 50),
                   TextField(
                     controller: _emailController,
