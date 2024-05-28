@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart'; // Ensure you have the intl package installed
+import 'package:picasso/appbar.dart';
+import 'artist.dart'; // Make sure this import path is correct
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
@@ -43,11 +45,11 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
         DocumentSnapshot artwork = snapshot.docs.first;
         Map<String, dynamic> artworkInfo = artwork.data() as Map<String, dynamic>;
         DocumentReference artistRef = artworkInfo['artist'] as DocumentReference;
-        DocumentReference movementRef = (artworkInfo['movement'] as List).first as DocumentReference;
+        List<DocumentReference> movementRefs = (artworkInfo['movement'] as List).cast<DocumentReference>();
         DocumentReference museumRef = artworkInfo['museum'] as DocumentReference;
 
         DocumentSnapshot artistSnapshot = await artistRef.get();
-        DocumentSnapshot movementSnapshot = await movementRef.get();
+        List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
         DocumentSnapshot museumSnapshot = await museumRef.get();
 
         // Format the date
@@ -60,8 +62,15 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
           'name': artworkInfo['name'] ?? 'Unknown',
           'year': artworkInfo['year'] ?? 'Unknown',
           'description': artworkInfo['description'] ?? 'No description available',
-          'artist': (artistSnapshot.data() as Map<String, dynamic>?),
-          'movement': (movementSnapshot.data() as Map<String, dynamic>?),
+          'artist': {
+            'id': artistSnapshot.id, // Document id
+            'image': artistSnapshot['image'],
+            'name': artistSnapshot['name'],
+            'deathdate': artistSnapshot['deathdate'],
+            'birthdate': artistSnapshot['birthdate'],
+            'description': artistSnapshot['description'],
+          },
+          'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
           'museum': (museumSnapshot.data() as Map<String, dynamic>?),
           'formattedDate': formattedDate // Include formatted date in the return data
         });
@@ -141,6 +150,9 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
             itemBuilder: (context, index) {
               Map<String, dynamic> data = artworks[index];
 
+              // Artist verisini konsola yazdır
+              print(data['artist']);
+
               return Padding(
                 padding: const EdgeInsets.all(15),
                 child: ListView(
@@ -201,7 +213,21 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                           Row(
                             children: [
                               GestureDetector(
-                                onTap: () => Navigator.pushNamed(context, '/artist', arguments: data['artist']),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ArtistPage(
+                                      artistData: {
+                                        'id': data['artist']['id'],
+                                        'image': data['artist']['image'],
+                                        'name': data['artist']['name'],
+                                        'deathdate': data['artist']['deathdate'],
+                                        'birthdate': data['artist']['birthdate'],
+                                        'description': data['artist']['description']
+                                      },
+                                    ),
+                                  ),
+                                ),
                                 child: Chip(
                                   label: Text(data['artist']['name']),
                                   backgroundColor: Colors.green[100],
@@ -223,24 +249,27 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                             style: TextStyle(fontSize: 16),
                           ),
                           SizedBox(height: 20),
+                          Row(children: [
+                            Wrap(
+                            spacing: 8.0,
+                            children: List<Widget>.generate(data['movements'].length, (int index) {
+                              return GestureDetector(
+                                onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
+                                child: Chip(
+                                  label: Text(data['movements'][index]['name']),
+                                  backgroundColor: Colors.green[100],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          ],),
+                          SizedBox(height: 20),
                           Row(
                             children: [
                               GestureDetector(
                                 onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
                                 child: Chip(
                                   label: Text(data['museum']['name']),
-                                  backgroundColor: Colors.green[100],
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 20),
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movement']),
-                                child: Chip(
-                                  label: Text(data['movement']['name']),
                                   backgroundColor: Colors.green[100],
                                 ),
                               ),
@@ -259,7 +288,8 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
-    Widget _buildBottomNavigationBar() {
+
+  Widget _buildBottomNavigationBar() {
     return BottomNavigationBar(
       currentIndex: _currentIndex,
       onTap: (index) {

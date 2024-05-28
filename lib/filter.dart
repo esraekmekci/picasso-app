@@ -13,6 +13,8 @@ class _FilterPageState extends State<FilterPage> {
   List<String> regions = [];
   List<String> periods = [];
   List<String> selectedFilters = [];
+  Map<String, Set<String>> countryCityMap = {};
+  String? selectedCountry;
 
   @override
   void initState() {
@@ -31,9 +33,20 @@ class _FilterPageState extends State<FilterPage> {
 
   void fetchMuseumRegions() async {
     var snapshot = await FirebaseFirestore.instance.collection('museums').get();
+    Map<String, Set<String>> tempCountryCityMap = {};
+    for (var doc in snapshot.docs) {
+      var data = doc.data();
+      String country = data['country'];
+      String city = data['city'];
+      if (tempCountryCityMap.containsKey(country)) {
+        tempCountryCityMap[country]!.add(city);
+      } else {
+        tempCountryCityMap[country] = {city};
+      }
+    }
     setState(() {
-      regions = snapshot.docs.map((doc) => doc.data()['country'] as String).toList();
-      regions = regions.toSet().toList();  // Remove duplicates
+      countryCityMap = tempCountryCityMap;
+      regions = countryCityMap.keys.toList();
     });
   }
 
@@ -62,7 +75,8 @@ class _FilterPageState extends State<FilterPage> {
               padding: EdgeInsets.all(8.0),
               child: Text('Museums', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            buildFilterTile('Region', regions, () {}),
+            buildFilterTile('Country', regions, () {}),
+            if (selectedCountry != null) buildCityFilter(selectedCountry!),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
               child: ElevatedButton(
@@ -96,7 +110,19 @@ class _FilterPageState extends State<FilterPage> {
               selected: selectedFilters.contains(option),
               onSelected: (bool selected) {
                 setState(() {
-                  selected ? selectedFilters.add(option) : selectedFilters.remove(option);
+                  if (selected) {
+                    if (title == 'Country') {
+                      selectedCountry = option;
+                    } else {
+                      selectedFilters.add(option);
+                    }
+                  } else {
+                    if (title == 'Country') {
+                      selectedCountry = null;
+                    } else {
+                      selectedFilters.remove(option);
+                    }
+                  }
                 });
               },
             )).toList(),
@@ -105,6 +131,11 @@ class _FilterPageState extends State<FilterPage> {
         ],
       ),
     );
+  }
+
+  Widget buildCityFilter(String country) {
+    List<String> cities = countryCityMap[country]?.toList() ?? [];
+    return buildFilterTile('City', cities, () {});
   }
 
   void applyFilters() {
