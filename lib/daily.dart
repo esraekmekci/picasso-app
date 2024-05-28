@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Ensure you have the intl package installed
+import 'package:intl/intl.dart';
+import 'package:picasso/appbar.dart'; // Ensure you have the intl package installed
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
@@ -113,12 +114,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Daily Artwork'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
+      appBar: CustomAppBar(),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: artworkDataList,
         builder: (context, snapshot) {
@@ -158,7 +154,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    Image.network(data['image']),
+                    Image.asset(data['image']),
                     SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(

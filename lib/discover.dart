@@ -160,7 +160,7 @@ Future<List<Museum>> fetchMuseums() async {
                       margin: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: NetworkImage(item.imageUrl),
+                          image: AssetImage(item.imageUrl),
                           fit: BoxFit.cover,
                         ),
                         borderRadius: BorderRadius.circular(12),
