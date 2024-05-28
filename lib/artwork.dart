@@ -45,7 +45,7 @@ class ArtworkDetailPage extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                Image.network(artwork['image']),
+                Image.asset(artwork['image']),
                 SizedBox(height: 20),
                 Text(
                   artwork['name'],

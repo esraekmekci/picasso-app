@@ -159,7 +159,7 @@ class _ArtistPageState extends State<ArtistPage> {
                               margin: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 image: DecorationImage(
-                                  image: NetworkImage(artwork['image']),
+                                  image: AssetImage(artwork['image']),
                                   fit: BoxFit.contain,
                                 ),
                                 borderRadius: BorderRadius.circular(8),

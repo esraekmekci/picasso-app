@@ -171,7 +171,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    Image.network(data['image']),
+                    Image.asset(data['image']),
                     SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
