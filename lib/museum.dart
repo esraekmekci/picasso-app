@@ -1,16 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/appbar.dart';
 import 'expandable_text.dart';
 
 class MuseumPage extends StatefulWidget {
   final dynamic museumData;
   const MuseumPage({super.key, required this.museumData});
+
   @override
   _MuseumPageState createState() => _MuseumPageState();
 }
 
-  class _MuseumPageState extends State<MuseumPage> {
-    bool _isLiked = false; // Boolean to manage like button state
+class _MuseumPageState extends State<MuseumPage> {
+  bool _isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLiked();
+  }
+
+  Future<void> _checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
+      setState(() {
+        _isLiked = favoriteMuseums.contains(widget.museumData['id']);
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
+      if (favoriteMuseums.contains(widget.museumData['id'])) {
+        // Remove from favorites
+        await userRef.update({
+          'favoriteMuseums': FieldValue.arrayRemove([widget.museumData['id']])
+        });
+      } else {
+        // Add to favorites
+        await userRef.update({
+          'favoriteMuseums': FieldValue.arrayUnion([widget.museumData['id']])
+        });
+      }
+      setState(() {
+        _isLiked = !_isLiked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +76,7 @@ class MuseumPage extends StatefulWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         widget.museumData['name'],
@@ -38,17 +88,13 @@ class MuseumPage extends StatefulWidget {
                       IconButton(
                         icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
                         color: Colors.red,
-                        onPressed: () {
-                          setState(() {
-                            _isLiked = !_isLiked; // Toggle the like state
-                          });
-                        },
+                        onPressed: _toggleFavorite,
                       )
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '${widget.museumData['city']}, ${widget.museumData['country']} ',
+                    '${widget.museumData['city']}, ${widget.museumData['country']}',
                     style: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,

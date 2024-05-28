@@ -2,12 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+class SignUpPage extends StatefulWidget {
+  @override
+  _SignUpPageState createState() => _SignUpPageState();
+}
 
-class SignUpPage extends StatelessWidget {
+class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +28,6 @@ class SignUpPage extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            
             Positioned(
               top: MediaQuery.of(context).padding.top, // Position right below the status bar
               left: 0,
@@ -31,7 +37,6 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             Padding(
-              
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -76,7 +81,7 @@ class SignUpPage extends StatelessWidget {
                   const SizedBox(height: 10),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: !_passwordVisible,
                     decoration: InputDecoration(
                       hintText: 'Password',
                       filled: true,
@@ -85,13 +90,22 @@ class SignUpPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
                       ),
-                      suffixIcon: const Icon(Icons.visibility),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _confirmPasswordController,
-                    obscureText: true,
+                    obscureText: !_confirmPasswordVisible,
                     decoration: InputDecoration(
                       hintText: 'Confirm Password',
                       filled: true,
@@ -100,7 +114,16 @@ class SignUpPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
                       ),
-                      suffixIcon: const Icon(Icons.visibility),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _confirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _confirmPasswordVisible = !_confirmPasswordVisible;
+                          });
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -119,7 +142,6 @@ class SignUpPage extends StatelessWidget {
                         );
 
                         if (userCredential.user != null) {
-                          // it's safe to access userCredential.user.uid because we checked that user is not null
                           await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
                             'username': _nameController.text.trim(),
                             'email': _emailController.text.trim()
@@ -134,7 +156,6 @@ class SignUpPage extends StatelessWidget {
                             Navigator.pushNamed(context, '/login');
                           });
                         } else {
-                          // Handle the case where the user is null, which means the user was not created
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Failed to register user')),
                           );
@@ -156,7 +177,6 @@ class SignUpPage extends StatelessWidget {
                         );
                       }
                     },
-
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[300],
                       padding: const EdgeInsets.symmetric(vertical: 16),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
@@ -8,17 +9,40 @@ class FilterPage extends StatefulWidget {
 }
 
 class _FilterPageState extends State<FilterPage> {
-  List<String> periods = ['1960 - Now', '1900-1960', '1850-1900'];
-  List<String> additionalPeriods = ['1700s', '1600s', '1500s'];
-  List<String> movements = ['Renaissance', 'Contemporary', 'Modern'];
-  List<String> additionalMovements = ['Futurism', 'Impressionism', 'Baroque'];
-  List<String> regions = ['France', 'The Netherlands', 'Japan'];
-  List<String> additionalRegions = ['Italy', 'Spain', 'Germany'];
+  List<String> movements = [];
+  List<String> regions = [];
+  List<String> periods = [];
   List<String> selectedFilters = [];
 
-  bool showMorePeriods = false;
-  bool showMoreMovements = false;
-  bool showMoreRegions = false;
+  @override
+  void initState() {
+    super.initState();
+    fetchMovements();
+    fetchMuseumRegions();
+    fetchPeriods();
+  }
+
+  void fetchMovements() async {
+    var snapshot = await FirebaseFirestore.instance.collection('movements').get();
+    setState(() {
+      movements = snapshot.docs.map((doc) => doc.data()['name'] as String).toList();
+    });
+  }
+
+  void fetchMuseumRegions() async {
+    var snapshot = await FirebaseFirestore.instance.collection('museums').get();
+    setState(() {
+      regions = snapshot.docs.map((doc) => doc.data()['country'] as String).toList();
+      regions = regions.toSet().toList();  // Remove duplicates
+    });
+  }
+
+  void fetchPeriods() {
+    // Assuming you decide how to handle periods manually
+    setState(() {
+      periods = ['1800s', '1900s', '2000s'];  // Example static periods
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,71 +56,32 @@ class _FilterPageState extends State<FilterPage> {
               padding: EdgeInsets.all(8.0),
               child: Text('Art Pieces', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            buildFilterTile('Period', periods, additionalPeriods, showMorePeriods,
-                () => setState(() => showMorePeriods = !showMorePeriods)),
-            buildFilterTile('Movement', movements, additionalMovements,
-                showMoreMovements, () => setState(() => showMoreMovements = !showMoreMovements)),
+            buildFilterTile('Period', periods, () {}),
+            buildFilterTile('Movement', movements, () {}),
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text('Museums', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
-            buildFilterTile('Region', regions, additionalRegions, showMoreRegions,
-                () => setState(() => showMoreRegions = !showMoreRegions)),
+            buildFilterTile('Region', regions, () {}),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
               child: ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ResultsPage(selectedFilters),
-                  ),
-                ),
+                onPressed: applyFilters,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[300], // Button color
                   padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 100),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
-                
-                child: const Text('Filter'),
+                child: const Text('Apply Filters'),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.panorama_horizontal_select_rounded),
-            label: 'Daily',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-        ],
-      ),
     );
   }
 
-  Widget buildFilterTile(String title, List<String> options, List<String> additionalOptions,
-      bool showMore, VoidCallback toggleShowMore) {
+  Widget buildFilterTile(String title, List<String> options, VoidCallback toggleShowMore) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
@@ -104,40 +89,31 @@ class _FilterPageState extends State<FilterPage> {
         children: [
           Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           Wrap(
-            spacing: 8.0, // Spacing between chips
-            runSpacing: 4.0, // Spacing between lines
-            children: buildChips(options, additionalOptions, showMore),
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: options.map((option) => FilterChip(
+              label: Text(option),
+              selected: selectedFilters.contains(option),
+              onSelected: (bool selected) {
+                setState(() {
+                  selected ? selectedFilters.add(option) : selectedFilters.remove(option);
+                });
+              },
+            )).toList(),
           ),
-          TextButton(onPressed: toggleShowMore, child: const Text('...')),
+          TextButton(onPressed: toggleShowMore, child: const Text('Show More')),
         ],
       ),
     );
   }
 
-  List<Widget> buildChips(List<String> options, List<String> additionalOptions, bool showMore) {
-    List<Widget> chips = List<Widget>.from(options.map((option) => FilterChip(
-          label: Text(option),
-          selected: selectedFilters.contains(option),
-          onSelected: (bool selected) {
-            setState(() {
-              selected ? selectedFilters.add(option) : selectedFilters.remove(option);
-            });
-          },
-        )));
-
-    if (showMore) {
-      chips.addAll(additionalOptions.map((option) => FilterChip(
-            label: Text(option),
-            selected: selectedFilters.contains(option),
-            onSelected: (bool selected) {
-              setState(() {
-                selected ? selectedFilters.add(option) : selectedFilters.remove(option);
-              });
-            },
-          )));
-    }
-
-    return chips;
+  void applyFilters() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultsPage(selectedFilters),
+      ),
+    );
   }
 }
 

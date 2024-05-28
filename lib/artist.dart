@@ -28,9 +28,12 @@ class _ArtistPageState extends State<ArtistPage> {
     String formattedDeathDate = DateFormat('dd MMM yyyy').format(deathDate);
     return Scaffold(
       appBar: CustomAppBar(),
+      
       body: SingleChildScrollView(
         child: Column(
+          
           children: [
+            
             Image.asset(widget.artistData['image'], width: double.infinity, height: 300, fit: BoxFit.cover),
             Padding(
               padding: const EdgeInsets.all(16.0),

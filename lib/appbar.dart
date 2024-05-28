@@ -6,16 +6,27 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-        title: Image.asset(
-          'assets/picaßo.png',  // Make sure the asset path is correctly given
-          height: 200, // You can adjust the size according to your needs
-          width: 1000,
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,  // If you want the logo to be centered
-        automaticallyImplyLeading: false,
-      );
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back, color: Colors.amber.shade600),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center, // Logo'nun gerçekten merkezde olmasını sağlar
+        children: [
+          Expanded(
+            child: Image.asset(
+              'assets/picaßo.png',
+              height: 200, 
+            ),
+          ),
+          SizedBox(width: AppBar().preferredSize.height), // Sağ taraf için yer bırakır, simetrik görünüm sağlar
+        ],
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+    );
   }
 
   @override
