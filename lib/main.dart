@@ -6,7 +6,7 @@ import 'daily.dart';
 import 'favorites.dart';
 import 'artist.dart';
 import 'museum.dart';
-import 'style.dart';
+import 'movement.dart';
 import 'login.dart';
 import 'signup.dart';
 import 'filter.dart';
@@ -34,7 +34,7 @@ class PicassoApp extends StatelessWidget {
         '/favorites': (context) => const FavoritesPage(),
         '/artist': (context) => const ArtistPage(),
         '/museum': (context) => const MuseumPage(),
-        '/style': (context) => const StylePage(),
+        '/movement': (context) => const MovementPage(),
         '/filter': (context) => const FilterPage(),
       },
     );

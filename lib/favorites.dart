@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'login.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -11,23 +12,53 @@ class FavoritesPage extends StatefulWidget {
 class _FavoritesPageState extends State<FavoritesPage> {
   int _currentIndex = 2; // Keep this if the bottom navigation is needed
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            _buildProfileHeader(), // New method to build the profile header
-            _buildSection(title: 'Favorite Artworks', itemCount: 10),
-            _buildSection(title: 'Favorite Artists', itemCount: 8),
-            _buildSection(title: 'Favorite Museums', itemCount: 5),
-          ],
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      actions: [
+        IconButton(
+          icon: Icon(Icons.exit_to_app),
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+
+            // Show a SnackBar after logging out
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("You have successfully logged out"),
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            // Navigate to the login page after showing the SnackBar
+            Future.delayed(Duration(seconds: 2), () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()), // Güncelleyin: Burada doğru login ekranınızın widget'ını kullanın
+                (Route<dynamic> route) => false, // Hiçbir rotayı saklama
+              );
+            });
+          },
         ),
+      ],
+      automaticallyImplyLeading: false,
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(10.0),
+      child: Column(
+        children: [
+          _buildProfileHeader(),
+          _buildSection(title: 'Favorite Artworks', itemCount: 10),
+          _buildSection(title: 'Favorite Artists', itemCount: 8),
+          _buildSection(title: 'Favorite Museums', itemCount: 5),
+        ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
+    ),
+    bottomNavigationBar: _buildBottomNavigationBar(),
+  );
+}
+
+
 
 Widget _buildProfileHeader() {
   final user = FirebaseAuth.instance.currentUser;
@@ -44,8 +75,18 @@ Widget _buildProfileHeader() {
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 40,
-                  backgroundImage: NetworkImage('https://via.placeholder.com/150'), // Placeholder image
+                  radius: 40, // Keep the avatar size
+                  backgroundColor: Colors.transparent, // Optional: Set background color if needed
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: AssetImage("assets/user.png"),
+                        fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
+                        scale: 1.5, // Adjust the scale to make image smaller inside the CircleAvatar
+                      ),
+                    ),
+                  ),
                 ),
                 SizedBox(width: 20),
                 Expanded(
