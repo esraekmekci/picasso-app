@@ -12,141 +12,193 @@ class FavoritesPage extends StatefulWidget {
 class _FavoritesPageState extends State<FavoritesPage> {
   int _currentIndex = 2; // Keep this if the bottom navigation is needed
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      actions: [
-        IconButton(
-          icon: Icon(Icons.exit_to_app),
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
 
-            // Show a SnackBar after logging out
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("You have successfully logged out"),
-                duration: Duration(seconds: 2),
-              ),
-            );
-
-            // Navigate to the login page after showing the SnackBar
-            Future.delayed(Duration(seconds: 2), () {
-              Navigator.pushAndRemoveUntil(
+              // Navigate to the login page immediately after logging out
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => LoginPage()), // Güncelleyin: Burada doğru login ekranınızın widget'ını kullanın
-                (Route<dynamic> route) => false, // Hiçbir rotayı saklama
+                MaterialPageRoute(builder: (context) => LoginPage()),
               );
-            });
-          },
-        ),
-      ],
-      automaticallyImplyLeading: false,
-    ),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        children: [
-          _buildProfileHeader(),
-          _buildSection(title: 'Favorite Artworks', itemCount: 10),
-          _buildSection(title: 'Favorite Artists', itemCount: 8),
-          _buildSection(title: 'Favorite Museums', itemCount: 5),
+
+              // Show a SnackBar after navigating to the login page
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("You have successfully logged out"),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              });
+            },
+          ),
         ],
+        automaticallyImplyLeading: false,
       ),
-    ),
-    bottomNavigationBar: _buildBottomNavigationBar(),
-  );
-}
+      body: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: Text('Please log in to see your favorites.'));
+          }
 
+          final user = snapshot.data;
+          if (user == null) {
+            return const Center(child: Text('Please log in to see your favorites.'));
+          }
 
-
-Widget _buildProfileHeader() {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return SizedBox();
-
-  return FutureBuilder<DocumentSnapshot>(
-    future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.done) {
-        var userData = snapshot.data?.data() as Map<String, dynamic>?;  // Safe access using '?.'
-        if (userData != null) {  // Check if userData is not null before using it
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Row(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
               children: [
-                CircleAvatar(
-                  radius: 40, // Keep the avatar size
-                  backgroundColor: Colors.transparent, // Optional: Set background color if needed
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage("assets/user.png"),
-                        fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
-                        scale: 1.5, // Adjust the scale to make image smaller inside the CircleAvatar
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userData['username'], // Display the username
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Text(userData['email']), // Display the email
-                    ],
-                  ),
-                )
+                _buildProfileHeader(user),
+                _buildFavoritesSection(user, 'Artworks', 'favorites', 'artworks'),
+                _buildFavoritesSection(user, 'Museums', 'favoriteMuseums', 'museums'),
               ],
             ),
           );
+        },
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildProfileHeader(User user) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          var userData = snapshot.data?.data() as Map<String, dynamic>?;  // Safe access using '?.'
+          if (userData != null) {  // Check if userData is not null before using it
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 40, // Keep the avatar size
+                    backgroundColor: Colors.transparent, // Optional: Set background color if needed
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage("assets/user.png"),
+                          fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
+                          scale: 1.5, // Adjust the scale to make image smaller inside the CircleAvatar
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userData['username'] ?? 'Unknown', // Display the username
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Text(userData['email'] ?? 'No email available'), // Display the email
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            );
+          } else {
+            return Text("No user data available");
+          }
+        } else if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
         } else {
-          return Text("No user data available");
+          return Text("Unable to load user data");
         }
-      } else if (snapshot.connectionState == ConnectionState.waiting) {
-        return CircularProgressIndicator();
-      } else {
-        return Text("Unable to load user data");
-      }
-    },
-  );
-}
+      },
+    );
+  }
 
+  Widget _buildFavoritesSection(User user, String title, String favoriteField, String collectionName) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          var userData = snapshot.data?.data() as Map<String, dynamic>?;  // Safe access using '?.'
+          if (userData != null && userData[favoriteField] != null && userData[favoriteField].isNotEmpty) {  // Check if userData is not null before using it
+            List<dynamic> favoriteIds = userData[favoriteField];
+            favoriteIds = favoriteIds.where((id) => id != null).toList(); // Filter out null values
 
-
-  Widget _buildSection({required String title, required int itemCount}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 15),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ),
-        SizedBox(
-          height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              return Container(
-                width: 140,
-                margin: const EdgeInsets.all(8),
-                color: Colors.grey[300],
-                alignment: Alignment.center,
-                child: Text('$title ${index + 1}'),
-              );
-            },
-          ),
-        ),
-      ],
+            return favoriteIds.isEmpty ? Text("No favorite $collectionName found.") : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection(collectionName).where(FieldPath.documentId, whereIn: favoriteIds).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 20),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 200, // Add this to make sure the ListView.builder has a height constraint
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            var item = snapshot.data!.docs[index];
+                            return GestureDetector(
+                              onTap: () {
+                                if (collectionName == 'artworks') {
+                                  Navigator.pushNamed(context, '/artDetails', arguments: item.data());
+                                } else if (collectionName == 'museums') {
+                                  Navigator.pushNamed(context, '/museum', arguments: item.data());
+                                }
+                              },
+                              child: Container(
+                                width: 140,
+                                margin: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage(item['image']),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (snapshot.hasError) {
+                  return Text("Error: ${snapshot.error}");
+                } else {
+                  return CircularProgressIndicator();
+                }
+              },
+            );
+          } else {
+            return Text("No favorite $collectionName found.");
+          }
+        } else if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else {
+          return Text("Unable to load favorite $collectionName.");
+        }
+      },
     );
   }
 
@@ -166,7 +218,7 @@ Widget _buildProfileHeader() {
               Navigator.pushNamed(context, '/daily');
               break;
             case 2:
-              Navigator.pushNamed(context, '/profile'); // Assuming '/profile' is the route for this page
+              Navigator.pushNamed(context, '/favorites'); // Assuming '/favorites' is the route for this page
               break;
           }
         }

@@ -55,9 +55,6 @@ class _NavigationExampleState extends State<NavigationExample> {
         ],
       ),
       body: <Widget>[
-        const ArtistPage(),
-        const ArtistPage(),
-        const ArtistPage(),
       ][currentPageIndex],
     );
   }
