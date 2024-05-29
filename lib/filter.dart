@@ -95,6 +95,7 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
+  
   Widget buildFilterTile(String title, List<String> options, VoidCallback toggleShowMore) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -132,6 +133,51 @@ class _FilterPageState extends State<FilterPage> {
       ),
     );
   }
+  
+ /*
+Widget buildFilterTile(String title, List<String> options, VoidCallback onUpdated) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        SizedBox(
+          height: 36, // Adjust the height according to the size of your FilterChip
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: options.map((option) => Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: FilterChip(
+                label: Text(option),
+                selected: selectedFilters.contains(option),
+                onSelected: (bool selected) {
+                  setState(() {
+                    if (selected) {
+                      if (title == 'Country') {
+                        selectedCountry = option;
+                      } else {
+                        selectedFilters.add(option);
+                      }
+                    } else {
+                      if (title == 'Country') {
+                        selectedCountry = null;
+                      } else {
+                        selectedFilters.remove(option);
+                      }
+                    }
+                  });
+                  onUpdated(); // Optional callback to handle updates
+                },
+              ),
+            )).toList(),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+*/
 
   Widget buildCityFilter(String country) {
     List<String> cities = countryCityMap[country]?.toList() ?? [];
