@@ -27,6 +27,11 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
     List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
     DocumentSnapshot museumSnapshot = await museumRef.get();
 
+    print(artistSnapshot.data());
+    //print(artistSnapshot.id);
+
+    widget.artwork['id'] = widget.artwork['id'] ?? artistSnapshot.id;
+
     return {
       'artist': {
         'id': artistSnapshot.id, // Document id
