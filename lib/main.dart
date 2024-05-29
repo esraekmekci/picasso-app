@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:picasso/category.dart';
 import 'firebase_options.dart';
 import 'discover.dart';
 import 'daily.dart';
@@ -33,7 +34,6 @@ class PicassoApp extends StatelessWidget {
         '/daily': (context) => const ArtDetailsPage(),
         '/discover': (context) => const DiscoverPage(),
         '/favorites': (context) => const FavoritesPage(),
-        '/filter': (context) => const FilterPage(),
       },
       onGenerateRoute: (RouteSettings settings) {
         if (settings.name == '/artist') {
@@ -62,6 +62,22 @@ class PicassoApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) {
               return ArtworkDetailPage(artwork: args);
+            },
+          );
+        }
+        if (settings.name == '/category') {
+          final args = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) {
+              return CategoryPage(category: args);
+            },
+          );
+        }
+        if (settings.name == '/filter') {
+          final args = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) {
+              return FilterPage(category: args);
             },
           );
         }
