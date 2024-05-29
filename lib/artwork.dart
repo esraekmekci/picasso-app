@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'artist.dart'; 
-class ArtworkDetailPage extends StatelessWidget {
-  final Map<String, dynamic> artwork;
+import 'package:firebase_auth/firebase_auth.dart';
 
-  ArtworkDetailPage({required this.artwork});
+import 'artist.dart';
+
+class ArtworkDetailPage extends StatefulWidget {
+  final Map<String, dynamic> artwork;
+  const ArtworkDetailPage({Key? key, required this.artwork}) : super(key: key);
+
+  @override
+  _ArtworkDetailPageState createState() => _ArtworkDetailPageState();
+}
+
+class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Future<Map<String, dynamic>> fetchArtworkDetails() async {
-    DocumentReference artistRef = artwork['artist'] as DocumentReference;
-    List<DocumentReference> movementRefs = (artwork['movement'] as List).cast<DocumentReference>();
-    DocumentReference museumRef = artwork['museum'] as DocumentReference;
+    DocumentReference artistRef = widget.artwork['artist'] as DocumentReference;
+    List<DocumentReference> movementRefs = (widget.artwork['movement'] as List).cast<DocumentReference>();
+    DocumentReference museumRef = widget.artwork['museum'] as DocumentReference;
 
     DocumentSnapshot artistSnapshot = await artistRef.get();
     List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
@@ -17,23 +29,60 @@ class ArtworkDetailPage extends StatelessWidget {
 
     return {
       'artist': {
-            'id': artistSnapshot.id, // Document id
-            'image': artistSnapshot['image'],
-            'name': artistSnapshot['name'],
-            'deathdate': artistSnapshot['deathdate'],
-            'birthdate': artistSnapshot['birthdate'],
-            'description': artistSnapshot['description'],
-          },
+        'id': artistSnapshot.id, // Document id
+        'image': artistSnapshot['image'],
+        'name': artistSnapshot['name'],
+        'deathdate': artistSnapshot['deathdate'],
+        'birthdate': artistSnapshot['birthdate'],
+        'description': artistSnapshot['description'],
+      },
       'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
       'museum': museumSnapshot.data() as Map<String, dynamic>,
     };
   }
 
+  Future<bool> checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await docRef.get();
+    print(widget.artwork['id']);
+    print(widget.artwork['name']);
+    if (doc.exists) {
+      List<dynamic> favoriteArtworks = doc.data()?['favorites'] ?? [];
+      return favoriteArtworks.contains(widget.artwork['id']);
+    }
+    return false;
+  }
+
+  Future<void> toggleFavorite() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await docRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteArtworks = doc.data()?['favorites'] ?? [];
+      if (favoriteArtworks.contains(widget.artwork['id'])) {
+        await docRef.update({
+          'favorites': FieldValue.arrayRemove([widget.artwork['id']])
+        });
+      } else {
+        await docRef.update({
+          'favorites': FieldValue.arrayUnion([widget.artwork['id']])
+        });
+      }
+      setState(() {
+        // Refresh the page to update the favorite icon
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(artwork['name'] ?? 'Artwork Detail'),
+        title: Text(widget.artwork['name'] ?? 'Artwork Detail'),
         backgroundColor: Colors.grey[300],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -56,7 +105,7 @@ class ArtworkDetailPage extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                Image.network(artwork['image']),
+                Image.network(widget.artwork['image']),
                 SizedBox(height: 20),
                 Container(
                   decoration: BoxDecoration(
@@ -67,15 +116,32 @@ class ArtworkDetailPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        artwork['name'],
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.artwork['name'],
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                          FutureBuilder<bool>(
+                            future: checkIfLiked(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return Icon(Icons.favorite_border, color: Colors.red);
+                              }
+                              bool isLiked = snapshot.data ?? false;
+                              return IconButton(
+                                icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                                color: Colors.red,
+                                onPressed: toggleFavorite,
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       SizedBox(height: 10),
-
-                      
                       Text(
-                        artwork['description'] ?? 'No description available',
+                        widget.artwork['description'] ?? 'No description available',
                         style: TextStyle(fontSize: 16),
                       ),
                       SizedBox(height: 20),
@@ -83,22 +149,15 @@ class ArtworkDetailPage extends StatelessWidget {
                         children: [
                           GestureDetector(
                             onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ArtistPage(
-                                      artistData: {
-                                        'id': details['artist']['id'],
-                                        'image': details['artist']['image'],
-                                        'name': details['artist']['name'],
-                                        'deathdate': details['artist']['deathdate'],
-                                        'birthdate': details['artist']['birthdate'],
-                                        'description': details['artist']['description']
-                                      },
-                                    ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ArtistPage(
+                                    artistData: details['artist'],
                                   ),
-                                );
-                              },
+                                ),
+                              );
+                            },
                             child: Chip(
                               label: Text(details['artist']['name']),
                               backgroundColor: Colors.green[100],
@@ -106,7 +165,7 @@ class ArtworkDetailPage extends StatelessWidget {
                           ),
                           SizedBox(width: 10),
                           Text(
-                            artwork['year']?.toString() ?? 'Unknown Year',
+                            widget.artwork['year']?.toString() ?? 'Unknown Year',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
@@ -143,7 +202,7 @@ class ArtworkDetailPage extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
+        bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1, // Set the correct index for the current page
         onTap: (index) {
           if (index == 1) {
