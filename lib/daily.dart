@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart'; // Ensure you have the intl package installed
 import 'package:picasso/appbar.dart';
-import 'package:picasso/navbar.dart';
 import 'artist.dart'; // Make sure this import path is correct
+import 'package:picasso/navbar.dart';
+import 'main.dart'; // Import the main file to access routeObserver
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
@@ -13,7 +14,7 @@ class ArtDetailsPage extends StatefulWidget {
   _ArtDetailsPageState createState() => _ArtDetailsPageState();
 }
 
-class _ArtDetailsPageState extends State<ArtDetailsPage> {
+class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
   late PageController _pageController;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   int _currentIndex = 1;
@@ -23,6 +24,26 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
     super.initState();
     _pageController = PageController(initialPage: 7); // Start from today's artwork
     artworkDataList = getArtworks();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    setState(() {
+      artworkDataList = getArtworks();
+    });
   }
 
   Future<List<Map<String, dynamic>>> getArtworks() async {
@@ -242,20 +263,21 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                             style: TextStyle(fontSize: 16),
                           ),
                           SizedBox(height: 20),
-                          Row(children: [
-                            Wrap(
-                            spacing: 8.0,
-                            children: List<Widget>.generate(data['movements'].length, (int index) {
-                              return GestureDetector(
-                                onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
-                                child: Chip(
-                                  label: Text(data['movements'][index]['name']),
-                                  backgroundColor: Colors.green[100],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          ],
+                          Row(
+                            children: [
+                              Wrap(
+                                spacing: 8.0,
+                                children: data['movements'].map<Widget>((movement) {
+                                  return GestureDetector(
+                                    onTap: () => Navigator.pushNamed(context, '/movement', arguments: movement),
+                                    child: Chip(
+                                      label: Text(movement['name']),
+                                      backgroundColor: Colors.green[100],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 20),
                           Row(
@@ -282,5 +304,4 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
       bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
-
 }

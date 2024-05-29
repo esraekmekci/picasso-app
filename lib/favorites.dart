@@ -4,14 +4,37 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/navbar.dart';
 import 'login.dart';
 import 'artwork.dart';
+import 'main.dart'; // Import the main file to access routeObserver
+
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
+
   @override
   _FavoritesPageState createState() => _FavoritesPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage> {
-  final int _currentIndex = 2; // Keep this if the bottom navigation is needed
+class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
+  final int _currentIndex = 2;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    setState(() {
+      // Trigger a rebuild to refresh the favorites list
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +46,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
 
-              // Navigate to the login page immediately after logging out
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => LoginPage()),
               );
 
-              // Show a SnackBar after navigating to the login page
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -81,22 +102,22 @@ class _FavoritesPageState extends State<FavoritesPage> {
       future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          var userData = snapshot.data?.data() as Map<String, dynamic>?;  // Safe access using '?.'
-          if (userData != null) {  // Check if userData is not null before using it
+          var userData = snapshot.data?.data() as Map<String, dynamic>?; 
+          if (userData != null) {
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 40, // Keep the avatar size
-                    backgroundColor: Colors.transparent, // Optional: Set background color if needed
+                    radius: 40,
+                    backgroundColor: Colors.transparent,
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           image: AssetImage("assets/user.png"),
-                          fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
-                          scale: 1.5, // Adjust the scale to make image smaller inside the CircleAvatar
+                          fit: BoxFit.contain,
+                          scale: 1.5,
                         ),
                       ),
                     ),
@@ -107,10 +128,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          userData['username'] ?? 'Unknown', // Display the username
+                          userData['username'] ?? 'Unknown',
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
-                        Text(userData['email'] ?? 'No email available'), // Display the email
+                        Text(userData['email'] ?? 'No email available'),
                       ],
                     ),
                   )
@@ -134,10 +155,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
       future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          var userData = snapshot.data?.data() as Map<String, dynamic>?;  // Safe access using '?.'
-          if (userData != null && userData[favoriteField] != null && userData[favoriteField].isNotEmpty) {  // Check if userData is not null before using it
+          var userData = snapshot.data?.data() as Map<String, dynamic>?; 
+          if (userData != null && userData[favoriteField] != null && userData[favoriteField].isNotEmpty) {  
             List<dynamic> favoriteIds = userData[favoriteField];
-            favoriteIds = favoriteIds.where((id) => id != null).toList(); // Filter out null values
+            favoriteIds = favoriteIds.where((id) => id != null).toList();
 
             return favoriteIds.isEmpty ? Text("No favorite $collectionName found.") : StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection(collectionName).where(FieldPath.documentId, whereIn: favoriteIds).snapshots(),
@@ -156,7 +177,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         
                       ),
                       SizedBox(
-                        height: 200, // Add this to make sure the ListView.builder has a height constraint
+                        height: 200,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: snapshot.data!.docs.length,
@@ -165,14 +186,19 @@ class _FavoritesPageState extends State<FavoritesPage> {
                             return GestureDetector(
                               onTap: () {
                                 if (collectionName == 'artworks') {
-                                  Navigator.pushNamed(context, '/artwork', arguments: item.data());
+                                  Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ArtworkDetailPage(artworkId: item.id),
+                                ),
+                              );
                                 } else if (collectionName == 'museums') {
                                   Navigator.pushNamed(context, '/museum', arguments: item.data());
                                 } else if (collectionName == 'movements') {
                                   Navigator.pushNamed(context, '/movement', arguments: item.data());
                                 } else if (collectionName == 'artists') {
                                   Navigator.pushNamed(context, '/artist', arguments: {
-                                  'id': item.id, // Document id
+                                  'id': item.id,
                                   'image': item['image'],
                                   'name': item['name'],
                                   'deathdate': item['deathdate'],
@@ -215,5 +241,4 @@ class _FavoritesPageState extends State<FavoritesPage> {
       },
     );
   }
-
 }

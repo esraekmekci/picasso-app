@@ -28,13 +28,16 @@ class _CategoryPageState extends State<CategoryPage> {
 
   Future<List<dynamic>> fetchItems() async {
     QuerySnapshot snapshot = await FirebaseFirestore.instance.collection(widget.category).get();
-    return snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    return snapshot.docs.map((doc) => {
+      ...doc.data() as Map<String, dynamic>,
+      'id': doc.id,
+    }).toList();
   }
-  
+
   void navigateToDetailPage(Map<String, dynamic> itemData) {
     Widget page;
     if (widget.category == 'artworks') {
-      page = ArtworkDetailPage(artwork: itemData);
+      page = ArtworkDetailPage(artworkId: itemData['id']);
     } else if (widget.category == 'movements') {
       page = MovementPage(movementData: itemData);
     } else if (widget.category == 'museums') {
@@ -53,7 +56,6 @@ class _CategoryPageState extends State<CategoryPage> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +133,7 @@ class _CategoryPageState extends State<CategoryPage> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(
+                              child: Image.network(
                                 item['image'] != null ? item['image'] : 'assets/picaßo.png',
                                 fit: BoxFit.cover,
                                 width: double.infinity,
@@ -144,21 +146,20 @@ class _CategoryPageState extends State<CategoryPage> {
                                 height: 50,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    Colors.black.withOpacity(0.6),
-                                    Colors.transparent,
-                                  ],
-                                  stops: [0.6, 1.0],
-                                  
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.6),
+                                      Colors.transparent,
+                                    ],
+                                    stops: [0.6, 1.0],
+                                  ),
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(10),
-                                  bottomRight: Radius.circular(10),
-                                ),
-                              ),
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: Padding(

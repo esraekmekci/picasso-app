@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:picasso/navbar.dart';import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/appbar.dart';
-import 'package:picasso/navbar.dart';
 import 'expandable_text.dart';
 import 'artwork.dart'; // Yeni oluşturduğumuz sayfanın dosya yolunu ekliyoruz
 import 'dart:async';
+
 class ArtistPage extends StatefulWidget {
   final Map<String, dynamic> artistData;
   const ArtistPage({super.key, required this.artistData});
@@ -18,30 +18,29 @@ class ArtistPage extends StatefulWidget {
 class _ArtistPageState extends State<ArtistPage> {
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   late Future<String> artistDatas;
+  final int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
     artistDatas = getArtist();
-    artistDatas.then((value){
+    artistDatas.then((value) {
       print(value);
     });
     if (widget.artistData['id'] != null && widget.artistData['id'].isNotEmpty) {
       artworkDataList = getArtworksByArtist(widget.artistData['id']);
     } else {
       print("Artist ID is empty or null");
-    }///burası bos geliyo widget.artistData['id'] yerine artistDatas 
+    }
   }
-
-
 
   Future<bool> checkIfLiked() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
     String aid = '';
-    artistDatas.then((value){
-    aid = value;
-     });
+    artistDatas.then((value) {
+      aid = value;
+    });
     final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
@@ -55,22 +54,21 @@ class _ArtistPageState extends State<ArtistPage> {
 
   Future<String> getArtist() async {
     var snapshot = await FirebaseFirestore.instance
-          .collection('artists')
-          .where('name', isEqualTo: widget.artistData['name'])
-          .limit(1)
-          .get();
+        .collection('artists')
+        .where('name', isEqualTo: widget.artistData['name'])
+        .limit(1)
+        .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        DocumentSnapshot artist = snapshot.docs.first;
-        print(artist.id);
-        return artist.id;
-      }else{
-        return 'artistInfo';
-      }
-      
+    if (snapshot.docs.isNotEmpty) {
+      DocumentSnapshot artist = snapshot.docs.first;
+      print(artist.id);
+      return artist.id;
+    } else {
+      return 'artistInfo';
+    }
   }
 
- Future<void> toggleFavorite(String artistId) async {
+  Future<void> toggleFavorite(String artistId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -90,12 +88,9 @@ class _ArtistPageState extends State<ArtistPage> {
           'favoriteArtists': FieldValue.arrayUnion([artistId])
         });
       }
-      setState(() {
-        
-      });
+      setState(() {});
     }
   }
-
 
   Future<List<Map<String, dynamic>>> getArtworksByArtist(String artistId) async {
     if (artistId.isEmpty) {
@@ -118,7 +113,10 @@ class _ArtistPageState extends State<ArtistPage> {
 
       final artworks = snapshot.docs.map((doc) {
         print('Artwork found: ${doc.data()}');
-        return doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          ...doc.data() as Map<String, dynamic>
+        };
       }).toList();
 
       return artworks;
@@ -162,25 +160,23 @@ class _ArtistPageState extends State<ArtistPage> {
                         ),
                       ),
                       FutureBuilder<bool>(
-                                future: checkIfLiked(),
-                                
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return Icon(Icons.favorite_border, color: Colors.red);
-                                  }
-                                  bool isLiked = snapshot.data ?? false;
-                                  return IconButton(
-                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                    color: Colors.red,
-                                    onPressed: () {
-                                          artistDatas.then((value){
-                                          toggleFavorite(value);
-                                        });
-                                      
-                                    },
-                                  );
-                                },
-                              ),
+                        future: checkIfLiked(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Icon(Icons.favorite_border, color: Colors.red);
+                          }
+                          bool isLiked = snapshot.data ?? false;
+                          return IconButton(
+                            icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                            color: Colors.red,
+                            onPressed: () {
+                              artistDatas.then((value) {
+                                toggleFavorite(value);
+                              });
+                            },
+                          );
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -231,7 +227,7 @@ class _ArtistPageState extends State<ArtistPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ArtworkDetailPage(artwork: artwork),
+                                  builder: (context) => ArtworkDetailPage(artworkId: artwork['id']),
                                 ),
                               );
                             },
@@ -258,7 +254,9 @@ class _ArtistPageState extends State<ArtistPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0)
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
 }
+
+

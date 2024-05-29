@@ -13,6 +13,9 @@ import 'signup.dart';
 import 'filter.dart';
 import 'artwork.dart';
 
+
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -28,6 +31,7 @@ class PicassoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: LoginPage(),
+      navigatorObservers: [routeObserver], // Add the RouteObserver here
       routes: {
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
@@ -38,21 +42,18 @@ class PicassoApp extends StatelessWidget {
       onGenerateRoute: (RouteSettings settings) {
         if (settings.name == '/artist') {
           final args = settings.arguments as Map<String, dynamic>? ?? {};
-          //print('Navigating to ArtistPage with args: $args'); // Debugging print statement
           return MaterialPageRoute(
             builder: (context) => ArtistPage(artistData: args),
           );
         }
         if (settings.name == '/museum') {
           final args = settings.arguments as Map<String, dynamic>? ?? {};
-          //print('Navigating to MuseumPage with args: $args'); // Debugging print statement
           return MaterialPageRoute(
             builder: (context) => MuseumPage(museumData: args),
           );
         }
         if (settings.name == '/movement') {
           final args = settings.arguments as Map<String, dynamic>? ?? {};
-          //print('Navigating to MovementPage with args: $args'); // Debugging print statement
           return MaterialPageRoute(
             builder: (context) => MovementPage(movementData: args),
           );
@@ -61,7 +62,7 @@ class PicassoApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) {
-              return ArtworkDetailPage(artwork: args);
+              return ArtworkDetailPage(artworkId: args['artworkId']);
             },
           );
         }
@@ -81,9 +82,10 @@ class PicassoApp extends StatelessWidget {
             },
           );
         }
-        // Add more generated routes here
-        return null;  // Returning null will cause onUnknownRoute to be called
+        return null; // Returning null will cause onUnknownRoute to be called
       },
     );
   }
 }
+
+        

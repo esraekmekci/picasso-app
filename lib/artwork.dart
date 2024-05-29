@@ -1,38 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import 'artist.dart';
+import 'package:intl/intl.dart'; // Ensure you have the intl package installed
+import 'package:picasso/appbar.dart';
+import 'artist.dart'; // Make sure this import path is correct
+import 'package:picasso/navbar.dart';
+import 'main.dart'; // Import the main file to access routeObserver
 
 class ArtworkDetailPage extends StatefulWidget {
-  final Map<String, dynamic> artwork;
-  const ArtworkDetailPage({Key? key, required this.artwork}) : super(key: key);
+  final String artworkId;
+
+  const ArtworkDetailPage({super.key, required this.artworkId});
 
   @override
   _ArtworkDetailPageState createState() => _ArtworkDetailPageState();
 }
 
-class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
+class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
+  late Future<Map<String, dynamic>> artworkData;
+  bool isLiked = false;
+  int _currentIndex = 1;
+
   @override
   void initState() {
     super.initState();
+    artworkData = getArtwork(widget.artworkId);
+    checkIfLiked(widget.artworkId);
   }
 
-  Future<Map<String, dynamic>> fetchArtworkDetails() async {
-    DocumentReference artistRef = widget.artwork['artist'] as DocumentReference;
-    List<DocumentReference> movementRefs = (widget.artwork['movement'] as List).cast<DocumentReference>();
-    DocumentReference museumRef = widget.artwork['museum'] as DocumentReference;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
 
-    DocumentSnapshot artistSnapshot = await artistRef.get();
-    List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
-    DocumentSnapshot museumSnapshot = await museumRef.get();
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
 
-    print(artistSnapshot.data());
-    //print(artistSnapshot.id);
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    checkIfLiked(widget.artworkId);
+  }
 
-    widget.artwork['id'] = widget.artwork['id'] ?? artistSnapshot.id;
+  Future<Map<String, dynamic>> getArtwork(String artworkId) async {
+    final DocumentSnapshot artworkSnapshot = await FirebaseFirestore.instance
+        .collection('artworks')
+        .doc(artworkId)
+        .get();
+
+    if (!artworkSnapshot.exists) {
+      throw Exception('Artwork not found');
+    }
+
+    final Map<String, dynamic> artworkInfo = artworkSnapshot.data() as Map<String, dynamic>;
+    final DocumentReference artistRef = artworkInfo['artist'] as DocumentReference;
+    final List<DocumentReference> movementRefs = (artworkInfo['movement'] as List).cast<DocumentReference>();
+    final DocumentReference museumRef = artworkInfo['museum'] as DocumentReference;
+
+    final DocumentSnapshot artistSnapshot = await artistRef.get();
+    final List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
+    final DocumentSnapshot museumSnapshot = await museumRef.get();
 
     return {
+      'id': artworkSnapshot.id,
+      'image': artworkInfo['image'] ?? 'Unknown',
+      'name': artworkInfo['name'] ?? 'Unknown',
+      'year': artworkInfo['year'] ?? 'Unknown',
+      'description': artworkInfo['description'] ?? 'No description available',
       'artist': {
         'id': artistSnapshot.id, // Document id
         'image': artistSnapshot['image'],
@@ -42,56 +80,57 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
         'description': artistSnapshot['description'],
       },
       'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
-      'museum': museumSnapshot.data() as Map<String, dynamic>,
+      'museum': (museumSnapshot.data() as Map<String, dynamic>?),
     };
   }
 
-  Future<bool> checkIfLiked() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await docRef.get();
-    print(widget.artwork['id']);
-    print(widget.artwork['name']);
-    if (doc.exists) {
-      List<dynamic> favoriteArtworks = doc.data()?['favorites'] ?? [];
-      return favoriteArtworks.contains(widget.artwork['id']);
-    }
-    return false;
-  }
-
-  Future<void> toggleFavorite() async {
+  Future<void> toggleFavorite(String artworkId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await docRef.get();
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
 
     if (doc.exists) {
-      List<dynamic> favoriteArtworks = doc.data()?['favorites'] ?? [];
-      if (favoriteArtworks.contains(widget.artwork['id'])) {
-        await docRef.update({
-          'favorites': FieldValue.arrayRemove([widget.artwork['id']])
+      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+      if (favorites.contains(artworkId)) {
+        // Remove from favorites
+        await userRef.update({
+          'favorites': FieldValue.arrayRemove([artworkId])
         });
       } else {
-        await docRef.update({
-          'favorites': FieldValue.arrayUnion([widget.artwork['id']])
+        // Add to favorites
+        await userRef.update({
+          'favorites': FieldValue.arrayUnion([artworkId])
         });
       }
       setState(() {
-        // Refresh the page to update the favorite icon
+        isLiked = !isLiked;
       });
     }
   }
+
+  Future<void> checkIfLiked(String artworkId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+      setState(() {
+        isLiked = favorites.contains(artworkId);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.artwork['name'] ?? 'Artwork Detail'),
-        backgroundColor: Colors.grey[300],
-      ),
+      appBar: CustomAppBar(),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: fetchArtworkDetails(),
+        future: artworkData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -99,78 +138,73 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
           if (snapshot.hasError) {
             return Center(child: Text('Failed to load art details'));
           }
-
           if (!snapshot.hasData) {
-            return Center(child: Text('No data available'));
+            return Center(child: Text('Artwork not found'));
           }
 
-          Map<String, dynamic> details = snapshot.data!;
+          final data = snapshot.data!;
 
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(15),
             child: ListView(
               children: [
-                Image.asset(widget.artwork['image']),
+                SizedBox(height: 10),
+                Image.asset(data['image']),
                 SizedBox(height: 20),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey[200], // Light grey background
+                    borderRadius: BorderRadius.circular(10), // Rounded corners
                   ),
                   padding: const EdgeInsets.all(15),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            widget.artwork['name'],
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                            data['name'],
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          FutureBuilder<bool>(
-                            future: checkIfLiked(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return Icon(Icons.favorite_border, color: Colors.red);
-                              }
-                              bool isLiked = snapshot.data ?? false;
-                              return IconButton(
-                                icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                color: Colors.red,
-                                onPressed: toggleFavorite,
-                              );
+                          IconButton(
+                            icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                            color: Colors.red,
+                            onPressed: () {
+                              toggleFavorite(data['id']);
                             },
                           ),
                         ],
                       ),
                       SizedBox(height: 10),
-                      Text(
-                        widget.artwork['description'] ?? 'No description available',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      SizedBox(height: 20),
                       Row(
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ArtistPage(
-                                    artistData: details['artist'],
-                                  ),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ArtistPage(
+                                  artistData: {
+                                    'id': data['artist']['id'],
+                                    'image': data['artist']['image'],
+                                    'name': data['artist']['name'],
+                                    'deathdate': data['artist']['deathdate'],
+                                    'birthdate': data['artist']['birthdate'],
+                                    'description': data['artist']['description']
+                                  },
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                             child: Chip(
-                              label: Text(details['artist']['name']),
+                              label: Text(data['artist']['name']),
                               backgroundColor: Colors.green[100],
                             ),
                           ),
                           SizedBox(width: 10),
                           Text(
-                            widget.artwork['year']?.toString() ?? 'Unknown Year',
+                            data['year']?.toString() ?? 'Unknown Year',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey,
@@ -179,25 +213,38 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
                         ],
                       ),
                       SizedBox(height: 20),
-                      Wrap(
-                        spacing: 8.0,
-                        children: List<Widget>.generate(details['movements'].length, (int index) {
-                          return GestureDetector(
-                            onTap: () => Navigator.pushNamed(context, '/movement', arguments: details['movements'][index]),
-                            child: Chip(
-                              label: Text(details['movements'][index]['name']),
-                              backgroundColor: Colors.green[100],
-                            ),
-                          );
-                        }).toList(),
+                      Text(
+                        data['description'],
+                        style: TextStyle(fontSize: 16),
                       ),
                       SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/museum', arguments: details['museum']),
-                        child: Chip(
-                          label: Text(details['museum']['name']),
-                          backgroundColor: Colors.green[100],
-                        ),
+                      Row(
+                        children: [
+                          Wrap(
+                            spacing: 8.0,
+                            children: data['movements'].map<Widget>((movement) {
+                              return GestureDetector(
+                                onTap: () => Navigator.pushNamed(context, '/movement', arguments: movement),
+                                child: Chip(
+                                  label: Text(movement['name']),
+                                  backgroundColor: Colors.green[100],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                            child: Chip(
+                              label: Text(data['museum']['name']),
+                              backgroundColor: Colors.green[100],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -207,38 +254,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
           );
         },
       ),
-        bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // Set the correct index for the current page
-        onTap: (index) {
-          if (index == 1) {
-            // Navigate to the daily page
-            Navigator.pushNamed(context, '/daily');
-          } else if (index != 1) {
-            switch (index) {
-              case 0:
-                Navigator.pushNamed(context, '/discover');
-                break;
-              case 2:
-                Navigator.pushNamed(context, '/favorites');
-                break;
-            }
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.panorama_horizontal_select_rounded),
-            label: 'Daily',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-        ],
-      ),
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
 }
