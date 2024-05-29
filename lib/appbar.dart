@@ -9,7 +9,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.amber.shade600),
         onPressed: () => Navigator.pop(context),
+        
       ),
+      
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center, // Logo'nun gerçekten merkezde olmasını sağlar
         children: [
@@ -27,6 +29,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       automaticallyImplyLeading: false,
     );
+    
   }
 
   @override

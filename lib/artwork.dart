@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'artist.dart'; 
 class ArtworkDetailPage extends StatelessWidget {
   final Map<String, dynamic> artwork;
 
@@ -39,54 +39,116 @@ class ArtworkDetailPage extends StatelessWidget {
             return Center(child: Text('Failed to load art details'));
           }
 
+          if (!snapshot.hasData) {
+            return Center(child: Text('No data available'));
+          }
+
           Map<String, dynamic> details = snapshot.data!;
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                Image.asset(artwork['image']),
+                Image.network(artwork['image']),
                 SizedBox(height: 20),
-                Text(
-                  artwork['name'],
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.all(15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        artwork['name'],
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+
+                      
+                      Text(
+                        artwork['description'] ?? 'No description available',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ArtistPage(
+                                  artistData: {
+                                    'id': details['artist']['id'],
+                                    'image': details['artist']['image'],
+                                    'name': details['artist']['name'],
+                                    'deathdate': details['artist']['deathdate'],
+                                    'birthdate': details['artist']['birthdate'],
+                                    'description': details['artist']['description']
+                                  },
+                                ),
+                              ),
+                            ),
+                            child: Chip(
+                              label: Text(details['artist']['name']),
+                              backgroundColor: Colors.green[100],
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            artwork['year']?.toString() ?? 'Unknown Year',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                      Wrap(
+                        spacing: 8.0,
+                        children: List<Widget>.generate(details['movements'].length, (int index) {
+                          return GestureDetector(
+                            onTap: () => Navigator.pushNamed(context, '/movement', arguments: details['movements'][index]),
+                            child: Chip(
+                              label: Text(details['movements'][index]['name']),
+                              backgroundColor: Colors.green[100],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/museum', arguments: details['museum']),
+                        child: Chip(
+                          label: Text(details['museum']['name']),
+                          backgroundColor: Colors.green[100],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 10),
-                Text(artwork['description'] ?? 'No description available', style: TextStyle(fontSize: 16)),
-                SizedBox(height: 20),
-                Text('Artist:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(details['artist']['name']),
-                SizedBox(height: 20),
-                Text('Movements:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Wrap(
-                  spacing: 8.0,
-                  children: details['movements'].map<Widget>((movement) {
-                    return Chip(
-                      label: Text(movement['name']),
-                      backgroundColor: Colors.green[100],
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 20),
-                Text('Museum:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(details['museum']['name']),
               ],
             ),
           );
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 1, // Set the correct index for the current page
         onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites');
-              break;
+          if (index == 1) {
+            // Navigate to the daily page
+            Navigator.pushNamed(context, '/daily');
+          } else if (index != 1) {
+            switch (index) {
+              case 0:
+                Navigator.pushNamed(context, '/discover');
+                break;
+              case 2:
+                Navigator.pushNamed(context, '/favorites');
+                break;
+            }
           }
         },
         items: const [

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/appbar.dart';
 import 'expandable_text.dart';
 import 'artwork.dart'; // Yeni oluşturduğumuz sayfanın dosya yolunu ekliyoruz
-
+import 'dart:async';
 class ArtistPage extends StatefulWidget {
   final Map<String, dynamic> artistData;
   const ArtistPage({super.key, required this.artistData});
@@ -14,18 +15,86 @@ class ArtistPage extends StatefulWidget {
 }
 
 class _ArtistPageState extends State<ArtistPage> {
-  bool _isLiked = false; // Boolean to manage like button state
   late Future<List<Map<String, dynamic>>>? artworkDataList;
+  late Future<String> artistDatas;
 
   @override
   void initState() {
     super.initState();
+    artistDatas = getArtist();
+    artistDatas.then((value){
+      print(value);
+    });
     if (widget.artistData['id'] != null && widget.artistData['id'].isNotEmpty) {
       artworkDataList = getArtworksByArtist(widget.artistData['id']);
     } else {
       print("Artist ID is empty or null");
+    }///burası bos geliyo widget.artistData['id'] yerine artistDatas 
+  }
+
+
+
+  Future<bool> checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    String aid = '';
+    artistDatas.then((value){
+    aid = value;
+     });
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteArtists = doc.data()?['favoriteArtists'] ?? [];
+
+      return favoriteArtists.contains(aid);
+    }
+    return false;
+  }
+
+  Future<String> getArtist() async {
+    var snapshot = await FirebaseFirestore.instance
+          .collection('artists')
+          .where('name', isEqualTo: widget.artistData['name'])
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot artist = snapshot.docs.first;
+        print(artist.id);
+        return artist.id;
+      }else{
+        return 'artistInfo';
+      }
+      
+  }
+
+ Future<void> toggleFavorite(String artistId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteArtists = doc.data()?['favoriteArtists'] ?? [];
+      if (favoriteArtists.contains(artistId)) {
+        // Remove from favorites
+        await userRef.update({
+          'favoriteArtists': FieldValue.arrayRemove([artistId])
+        });
+      } else {
+        // Add to favorites
+        await userRef.update({
+          'favoriteArtists': FieldValue.arrayUnion([artistId])
+        });
+      }
+      setState(() {
+        
+      });
     }
   }
+
 
   Future<List<Map<String, dynamic>>> getArtworksByArtist(String artistId) async {
     if (artistId.isEmpty) {
@@ -91,15 +160,26 @@ class _ArtistPageState extends State<ArtistPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-                        color: Colors.red,
-                        onPressed: () {
-                          setState(() {
-                            _isLiked = !_isLiked;
-                          });
-                        },
-                      )
+                      FutureBuilder<bool>(
+                                future: checkIfLiked(),
+                                
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Icon(Icons.favorite_border, color: Colors.red);
+                                  }
+                                  bool isLiked = snapshot.data ?? false;
+                                  return IconButton(
+                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                                    color: Colors.red,
+                                    onPressed: () {
+                                          artistDatas.then((value){
+                                          toggleFavorite(value);
+                                        });
+                                      
+                                    },
+                                  );
+                                },
+                              ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -159,7 +239,7 @@ class _ArtistPageState extends State<ArtistPage> {
                               margin: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 image: DecorationImage(
-                                  image: AssetImage(artwork['image']),
+                                  image: NetworkImage(artwork['image']),
                                   fit: BoxFit.contain,
                                 ),
                                 borderRadius: BorderRadius.circular(8),

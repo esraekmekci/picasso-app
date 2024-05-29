@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:picasso/appbar.dart';
 import 'expandable_text.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 class MovementPage extends StatefulWidget {
   final dynamic movementData;
   const MovementPage({super.key, required this.movementData});
@@ -11,7 +12,78 @@ class MovementPage extends StatefulWidget {
 }
 
 class _MovementPageState extends State<MovementPage> {
-  bool _isLiked = false;
+  late Future<String> movementDatas;
+
+  @override
+  void initState() {
+    super.initState();
+    movementDatas = getMovement();
+    movementDatas.then((value){
+      print(value);
+    });
+  }
+
+  Future<bool> checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    String mid = '';
+    movementDatas.then((value){
+    mid = value;
+     });
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMovements = doc.data()?['favoriteMovements'] ?? [];
+
+      return favoriteMovements.contains(mid);
+    }
+    return false;
+  }
+
+  Future<void> toggleFavorite(String movementId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMovements = doc.data()?['favoriteMovements'] ?? [];
+      if (favoriteMovements.contains(movementId)) {
+        // Remove from favorites
+        await userRef.update({
+          'favoriteMovements': FieldValue.arrayRemove([movementId])
+        });
+      } else {
+        // Add to favorites
+        await userRef.update({
+          'favoriteMovements': FieldValue.arrayUnion([movementId])
+        });
+      }
+      setState(() {
+        
+      });
+    }
+  }
+
+
+  Future<String> getMovement() async {
+    var snapshot = await FirebaseFirestore.instance
+          .collection('movements')
+          .where('name', isEqualTo: widget.movementData['name'])
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot movement = snapshot.docs.first;
+        print(movement.id);
+        return movement.id;
+      }else{
+        return 'movementInfo';
+      }
+      
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +108,26 @@ class _MovementPageState extends State<MovementPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-                        color: Colors.red,
-                        onPressed: () {
-                          setState(() {
-                            _isLiked = !_isLiked; // Toggle the like state
-                          });
-                        },
-                      )
+                      FutureBuilder<bool>(
+                                future: checkIfLiked(),
+                                
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Icon(Icons.favorite_border, color: Colors.red);
+                                  }
+                                  bool isLiked = snapshot.data ?? false;
+                                  return IconButton(
+                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                                    color: Colors.red,
+                                    onPressed: () {
+                                          movementDatas.then((value){
+                                          toggleFavorite(value);
+                                        });
+                                      
+                                    },
+                                  );
+                                },
+                              )
                     ],
                   ),
                   const SizedBox(height: 10),

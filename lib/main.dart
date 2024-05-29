@@ -10,6 +10,7 @@ import 'movement.dart';
 import 'login.dart';
 import 'signup.dart';
 import 'filter.dart';
+import 'artwork.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +55,14 @@ class PicassoApp extends StatelessWidget {
           //print('Navigating to MovementPage with args: $args'); // Debugging print statement
           return MaterialPageRoute(
             builder: (context) => MovementPage(movementData: args),
+          );
+        }
+        if (settings.name == '/artwork') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) {
+              return ArtworkDetailPage(artwork: args);
+            },
           );
         }
         // Add more generated routes here

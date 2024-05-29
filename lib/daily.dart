@@ -150,9 +150,6 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
             itemBuilder: (context, index) {
               Map<String, dynamic> data = artworks[index];
 
-              // Artist verisini konsola yazdır
-              print(data['artist']);
-
               return Padding(
                 padding: const EdgeInsets.all(15),
                 child: ListView(
@@ -171,7 +168,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    Image.asset(data['image']),
+                    Image.network(data['image']),
                     SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
@@ -235,7 +232,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                               ),
                               SizedBox(width: 10),
                               Text(
-                                data['year'],
+                                data['year']?.toString() ?? 'Unknown Year',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey,
@@ -262,7 +259,8 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                               );
                             }).toList(),
                           ),
-                          ],),
+                          ],
+                          ),
                           SizedBox(height: 20),
                           Row(
                             children: [
@@ -293,7 +291,9 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
     return BottomNavigationBar(
       currentIndex: _currentIndex,
       onTap: (index) {
-        if (index != _currentIndex) {
+        if (index == 1) {
+          _pageController.jumpToPage(7); // Navigate to today's artwork
+        } else if (index != _currentIndex) {
           setState(() {
             _currentIndex = index;
           });

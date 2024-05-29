@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
-
+import 'artwork.dart';
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
   @override
@@ -64,6 +64,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 _buildProfileHeader(user),
                 _buildFavoritesSection(user, 'Artworks', 'favorites', 'artworks'),
                 _buildFavoritesSection(user, 'Museums', 'favoriteMuseums', 'museums'),
+                _buildFavoritesSection(user, 'Movements', 'favoriteMovements', 'movements'),
+                _buildFavoritesSection(user, 'Artists', 'favoriteArtists', 'artists'),
               ],
             ),
           );
@@ -150,6 +152,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
+                        
                       ),
                       SizedBox(
                         height: 200, // Add this to make sure the ListView.builder has a height constraint
@@ -161,9 +164,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
                             return GestureDetector(
                               onTap: () {
                                 if (collectionName == 'artworks') {
-                                  Navigator.pushNamed(context, '/artDetails', arguments: item.data());
+                                  Navigator.pushNamed(context, '/artwork', arguments: item.data());
                                 } else if (collectionName == 'museums') {
                                   Navigator.pushNamed(context, '/museum', arguments: item.data());
+                                } else if (collectionName == 'movements') {
+                                  Navigator.pushNamed(context, '/movement', arguments: item.data());
+                                } else if (collectionName == 'artists') {
+                                  Navigator.pushNamed(context, '/artist', arguments: item.data());
                                 }
                               },
                               child: Container(
@@ -171,7 +178,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                 margin: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image: AssetImage(item['image']),
+                                    image: NetworkImage(item['image']),
                                     fit: BoxFit.cover,
                                   ),
                                 ),

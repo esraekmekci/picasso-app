@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,30 +15,36 @@ class MuseumPage extends StatefulWidget {
 }
 
 class _MuseumPageState extends State<MuseumPage> {
-  bool _isLiked = false;
+  late Future<String> museumDatas;
 
   @override
   void initState() {
     super.initState();
-    _checkIfLiked();
+    museumDatas = getMuseum();
+    museumDatas.then((value){
+      print(value);
+    });
   }
 
-  Future<void> _checkIfLiked() async {
+  Future<bool> checkIfLiked() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
+    if (user == null) return false;
+    String mid = '';
+    museumDatas.then((value){
+    mid = value;
+     });
     final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
     if (doc.exists) {
       List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
-      setState(() {
-        _isLiked = favoriteMuseums.contains(widget.museumData['id']);
-      });
+
+      return favoriteMuseums.contains(mid);
     }
+    return false;
   }
 
-  Future<void> _toggleFavorite() async {
+  Future<void> toggleFavorite(String museumId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -45,21 +53,39 @@ class _MuseumPageState extends State<MuseumPage> {
 
     if (doc.exists) {
       List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
-      if (favoriteMuseums.contains(widget.museumData['id'])) {
+      if (favoriteMuseums.contains(museumId)) {
         // Remove from favorites
         await userRef.update({
-          'favoriteMuseums': FieldValue.arrayRemove([widget.museumData['id']])
+          'favoriteMuseums': FieldValue.arrayRemove([museumId])
         });
       } else {
         // Add to favorites
         await userRef.update({
-          'favoriteMuseums': FieldValue.arrayUnion([widget.museumData['id']])
+          'favoriteMuseums': FieldValue.arrayUnion([museumId])
         });
       }
       setState(() {
-        _isLiked = !_isLiked;
+        
       });
     }
+  }
+
+
+  Future<String> getMuseum() async {
+    var snapshot = await FirebaseFirestore.instance
+          .collection('museums')
+          .where('name', isEqualTo: widget.museumData['name'])
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        DocumentSnapshot museum = snapshot.docs.first;
+        print(museum.id);
+        return museum.id;
+      }else{
+        return 'museumInfo';
+      }
+      
   }
 
   @override
@@ -85,11 +111,27 @@ class _MuseumPageState extends State<MuseumPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border),
-                        color: Colors.red,
-                        onPressed: _toggleFavorite,
-                      )
+                      
+                      FutureBuilder<bool>(
+                                future: checkIfLiked(),
+                                
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Icon(Icons.favorite_border, color: Colors.red);
+                                  }
+                                  bool isLiked = snapshot.data ?? false;
+                                  return IconButton(
+                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                                    color: Colors.red,
+                                    onPressed: () {
+                                          museumDatas.then((value){
+                                          toggleFavorite(value);
+                                        });
+                                      
+                                    },
+                                  );
+                                },
+                              ),
                     ],
                   ),
                   const SizedBox(height: 10),
