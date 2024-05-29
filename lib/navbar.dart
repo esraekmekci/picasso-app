@@ -1,61 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:picasso/artist.dart';
 
-class NavBar extends StatelessWidget {
-  const NavBar({super.key});
+class CustomBottomNavBar extends StatefulWidget {
+  final int currentIndex;
+  const CustomBottomNavBar({Key? key, required this.currentIndex}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(useMaterial3: true),
-      home: const NavigationExample(),
-    );
+  State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
+}
+
+class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.currentIndex;  // Initial index set from parent widget
   }
-}
 
-class NavigationExample extends StatefulWidget {
-  const NavigationExample({super.key});
-
-  @override
-  State<NavigationExample> createState() => _NavigationExampleState();
-}
-
-class _NavigationExampleState extends State<NavigationExample> {
-  int currentPageIndex = 0;
+  void _onItemTapped(int index) {
+    if (index != _currentIndex) {
+      setState(() {
+        _currentIndex = index;
+      });
+      switch (index) {
+        case 0:
+          Navigator.pushNamed(context, '/discover');
+          break;
+        case 1:
+          Navigator.pushNamed(context, '/daily');
+          break;
+        case 2:
+          Navigator.pushNamed(context, '/favorites');
+          break;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
-        indicatorColor: Colors.amber,
-        selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.search),
-            label: 'Discover',
-          ),
-          NavigationDestination(
-            icon: Badge(child: Icon(Icons.notifications_sharp)),
-            label: 'Notifications',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              label: Text('2'),
-              child: Icon(Icons.messenger_sharp),
-            ),
-            label: 'Messages',
-          ),
-        ],
-      ),
-      body: <Widget>[
-      ][currentPageIndex],
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: _onItemTapped,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.search),
+          label: 'Discover',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.panorama_horizontal_select_rounded),
+          label: 'Daily',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite),
+          label: 'Favorites',
+        ),
+      ],
     );
   }
 }

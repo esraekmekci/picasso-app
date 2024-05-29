@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart'; // Ensure you have the intl package installed
 import 'package:picasso/appbar.dart';
+import 'package:picasso/navbar.dart';
 import 'artist.dart'; // Make sure this import path is correct
 
 class ArtDetailsPage extends StatefulWidget {
@@ -278,47 +279,8 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) {
-        if (index == 1) {
-          _pageController.jumpToPage(7); // Navigate to today's artwork
-        } else if (index != _currentIndex) {
-          setState(() {
-            _currentIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites'); // Assuming '/favorites' is the route for this page
-              break;
-          }
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search),
-          label: 'Discover',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.panorama_horizontal_select_rounded),
-          label: 'Daily',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.favorite),
-          label: 'Favorites',
-        ),
-      ],
-    );
-  }
 }

@@ -125,4 +125,7 @@ flutter:
     - assets/national-gallery.jpeg
     - assets/vincent-van-gogh.jpg
     - assets/leonardo-da-vinci.jpg
+    - assets/artists.webp
+    - assets/artworks.jpg
+    - assets/museums.jpg
 

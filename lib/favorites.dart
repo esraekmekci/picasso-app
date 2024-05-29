@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:picasso/navbar.dart';
 import 'login.dart';
 import 'artwork.dart';
 class FavoritesPage extends StatefulWidget {
@@ -10,7 +11,7 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class _FavoritesPageState extends State<FavoritesPage> {
-  int _currentIndex = 2; // Keep this if the bottom navigation is needed
+  final int _currentIndex = 2; // Keep this if the bottom navigation is needed
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
 
@@ -215,41 +216,4 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) {
-        if (index != _currentIndex) {
-          setState(() {
-            _currentIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/discover');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/daily');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/favorites'); // Assuming '/favorites' is the route for this page
-              break;
-          }
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search),
-          label: 'Discover',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.panorama_horizontal_select_rounded),
-          label: 'Daily',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.favorite),
-          label: 'Favorites',
-        ),
-      ],
-    );
-  }
 }
