@@ -170,7 +170,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                 } else if (collectionName == 'movements') {
                                   Navigator.pushNamed(context, '/movement', arguments: item.data());
                                 } else if (collectionName == 'artists') {
-                                  Navigator.pushNamed(context, '/artist', arguments: item.data());
+                                  Navigator.pushNamed(context, '/artist', arguments: {
+                                  'id': item.id, // Document id
+                                  'image': item['image'],
+                                  'name': item['name'],
+                                  'deathdate': item['deathdate'],
+                                  'birthdate': item['birthdate'],
+                                  'description': item['description']});
                                 }
                               },
                               child: Container(
