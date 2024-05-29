@@ -16,7 +16,14 @@ class ArtworkDetailPage extends StatelessWidget {
     DocumentSnapshot museumSnapshot = await museumRef.get();
 
     return {
-      'artist': artistSnapshot.data() as Map<String, dynamic>,
+      'artist': {
+            'id': artistSnapshot.id, // Document id
+            'image': artistSnapshot['image'],
+            'name': artistSnapshot['name'],
+            'deathdate': artistSnapshot['deathdate'],
+            'birthdate': artistSnapshot['birthdate'],
+            'description': artistSnapshot['description'],
+          },
       'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
       'museum': museumSnapshot.data() as Map<String, dynamic>,
     };
@@ -75,21 +82,23 @@ class ArtworkDetailPage extends StatelessWidget {
                       Row(
                         children: [
                           GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ArtistPage(
-                                  artistData: {
-                                    'id': details['artist']['id'],
-                                    'image': details['artist']['image'],
-                                    'name': details['artist']['name'],
-                                    'deathdate': details['artist']['deathdate'],
-                                    'birthdate': details['artist']['birthdate'],
-                                    'description': details['artist']['description']
-                                  },
-                                ),
-                              ),
-                            ),
+                            onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ArtistPage(
+                                      artistData: {
+                                        'id': details['artist']['id'],
+                                        'image': details['artist']['image'],
+                                        'name': details['artist']['name'],
+                                        'deathdate': details['artist']['deathdate'],
+                                        'birthdate': details['artist']['birthdate'],
+                                        'description': details['artist']['description']
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
                             child: Chip(
                               label: Text(details['artist']['name']),
                               backgroundColor: Colors.green[100],
