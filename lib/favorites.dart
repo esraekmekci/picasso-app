@@ -184,7 +184,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                 margin: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image: NetworkImage(item['image']),
+                                    image: AssetImage(item['image']),
                                     fit: BoxFit.cover,
                                   ),
                                 ),

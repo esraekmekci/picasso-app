@@ -123,12 +123,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Daily Artwork'),
-        backgroundColor: Colors.grey[300],
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
+      appBar: CustomAppBar(),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: artworkDataList,
         builder: (context, snapshot) {
@@ -168,7 +163,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    Image.network(data['image']),
+                    Image.asset(data['image']),
                     SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(

@@ -110,7 +110,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> {
             padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                Image.network(widget.artwork['image']),
+                Image.asset(widget.artwork['image']),
                 SizedBox(height: 20),
                 Container(
                   decoration: BoxDecoration(
