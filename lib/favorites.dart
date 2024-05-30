@@ -32,16 +32,17 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware, SingleTi
     super.dispose();
   }
 
-  void navigateToDetailPage(Map<String, dynamic> itemData, String category) {
+  void navigateToDetailPage(DocumentSnapshot itemData, String category) {
     Widget page;
     if (category == 'artworks') {
-      page = ArtworkDetailPage(artworkId: itemData['id']);
+      print(itemData.id);
+      page = ArtworkDetailPage(artworkId: itemData.id);
     } else if (category == 'movements') {
-      page = MovementPage(movementData: itemData);
+      page = MovementPage(movementData: itemData.data());
     } else if (category == 'museums') {
-      page = MuseumPage(museumData: itemData);
+      page = MuseumPage(museumData: itemData.data());
     } else if (category == 'artists') {
-      page = ArtistPage(artistData: itemData);
+      page = ArtistPage(artistData: itemData.data() as Map<String, dynamic>);
     } else {
       // Default to a generic detail page or an error page
       page = Text("No detail page for this category");
@@ -198,7 +199,7 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware, SingleTi
                     itemBuilder: (context, index) {
                       var item = snapshot.data!.docs[index]; // Assuming snapshot.data is a QuerySnapshot.
                       return GestureDetector(
-                        onTap: () => navigateToDetailPage(item.data() as Map<String, dynamic>, collectionName), // Implement or replace navigateToDetailPage function accordingly.
+                        onTap: () => navigateToDetailPage(item, collectionName), // Implement or replace navigateToDetailPage function accordingly.
                         child: Container(
                           margin: EdgeInsets.all(5),
                           decoration: BoxDecoration(

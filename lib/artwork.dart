@@ -67,7 +67,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
 
     return {
       'id': artworkSnapshot.id,
-      'image': artworkInfo['image'] ?? 'Unknown',
+      'image': artworkInfo['framedImage'] ?? 'Unknown',
       'name': artworkInfo['name'] ?? 'Unknown',
       'year': artworkInfo['year'] ?? 'Unknown',
       'description': artworkInfo['description'] ?? 'No description available',

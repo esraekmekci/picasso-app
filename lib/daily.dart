@@ -80,7 +80,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
 
         artworks.add({
           'id': artwork.id,
-          'image': artworkInfo['image'] ?? 'Unknown',
+          'image': artworkInfo['framedImage'] ?? 'Unknown',
           'name': artworkInfo['name'] ?? 'Unknown',
           'year': artworkInfo['year'] ?? 'Unknown',
           'description': artworkInfo['description'] ?? 'No description available',
