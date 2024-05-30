@@ -92,8 +92,17 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
             'birthdate': artistSnapshot['birthdate'],
             'description': artistSnapshot['description'],
           },
-          'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
-          'museum': (museumSnapshot.data() as Map<String, dynamic>?),
+          'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList() ,
+
+          'museum': {
+            'id': museumSnapshot.id, // Document id
+            'city': museumSnapshot['city'],
+            'country': museumSnapshot['country'],
+            'image': museumSnapshot['image'],
+            'name': museumSnapshot['name'],
+            'description': museumSnapshot['description'],
+          },
+
           'formattedDate': formattedDate // Include formatted date in the return data
         });
       }

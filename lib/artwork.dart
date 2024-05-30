@@ -83,7 +83,14 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
         'description': artistSnapshot['description'],
       },
       'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
-      'museum': (museumSnapshot.data() as Map<String, dynamic>?),
+      'museum': {
+            'id': museumSnapshot.id, // Document id
+            'city': museumSnapshot['city'],
+            'country': museumSnapshot['country'],
+            'image': museumSnapshot['image'],
+            'name': museumSnapshot['name'],
+            'description': museumSnapshot['description'],
+          },   
     };
   }
 

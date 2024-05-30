@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/appbar.dart';
 import 'package:picasso/navbar.dart';
 import 'expandable_text.dart';
+import 'artwork.dart';
 
 class MuseumPage extends StatefulWidget {
   final dynamic museumData;
@@ -16,7 +17,10 @@ class MuseumPage extends StatefulWidget {
 }
 
 class _MuseumPageState extends State<MuseumPage> {
+  late Future<List<Map<String, dynamic>>>? artworkDataList;
   late Future<String> museumDatas;
+  final int _currentIndex = 0;
+
 
   @override
   void initState() {
@@ -25,6 +29,46 @@ class _MuseumPageState extends State<MuseumPage> {
     museumDatas.then((value){
       print(value);
     });
+    if (widget.museumData['id'] != null && widget.museumData['id'].isNotEmpty) {
+      artworkDataList = getArtworksByMuseum(widget.museumData['id']);
+    } else {
+      print("Museum ID is empty or null");
+    }
+
+  }
+
+  Future<List<Map<String, dynamic>>> getArtworksByMuseum(String museumId) async {
+    if (museumId.isEmpty) {
+      print('Museum ID is empty');
+      return [];
+    }
+
+    DocumentReference museumRef = FirebaseFirestore.instance.collection('museums').doc(museumId);
+
+    try {
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('artworks')
+          .where('museum', isEqualTo: museumRef)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        print('No artworks found for museum');
+        return [];
+      }
+
+      final artworks = snapshot.docs.map((doc) {
+        print('Artwork found: ${doc.data()}');
+        return {
+          'id': doc.id,
+          ...doc.data() as Map<String, dynamic>
+        };
+      }).toList();
+
+      return artworks;
+    } catch (error) {
+      print('Error fetching artworks: $error');
+      return [];
+    }
   }
 
   Future<bool> checkIfLiked() async {
@@ -154,22 +198,57 @@ class _MuseumPageState extends State<MuseumPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: List.generate(6, (index) {
-                      return GestureDetector(
-                        onTap: () {
-                          // Handle artwork tap here
-                        },
-                        child: Card(
-                          child: Container(
-                            color: Colors.grey[300],
-                          ),
+
+
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: artworkDataList,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Failed to load artworks: ${snapshot.error}'));
+                      }
+                      if (snapshot.data == null || snapshot.data!.isEmpty) {
+                        return Center(child: Text('No artworks available'));
+                      }
+
+                      List<Map<String, dynamic>> artworks = snapshot.data!;
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
                         ),
+                        itemCount: artworks.length,
+                        itemBuilder: (context, index) {
+                          Map<String, dynamic> artwork = artworks[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ArtworkDetailPage(artworkId: artwork['id']),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 140,
+                              margin: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage(artwork['image']),
+                                  fit: BoxFit.contain,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                            ),
+                          );
+                        },
                       );
-                    }),
+                    },
                   ),
                 ],
               ),
@@ -177,7 +256,7 @@ class _MuseumPageState extends State<MuseumPage> {
           ],
         ),
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0)
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
 }
