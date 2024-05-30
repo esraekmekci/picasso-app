@@ -119,59 +119,57 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
       bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
-
-  Widget _buildProfileHeader(User user) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          var userData = snapshot.data?.data() as Map<String, dynamic>?; // Safe access using '?.'
-          if (userData != null) { // Check if userData is not null before using it
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 40, // Keep the avatar size
-                    backgroundColor: Colors.transparent, // Optional: Set background color if needed
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage("assets/user.png"),
-                          fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
-                          scale: 1.5, // Adjust the scale to make image smaller inside the CircleAvatar
-                        ),
+Widget _buildProfileHeader(User user) {
+  return FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.done) {
+        var userData = snapshot.data?.data() as Map<String, dynamic>?; // Safe access using '?.'
+        if (userData != null) { // Check if userData is not null before using it
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 40, // Keep the avatar size
+                  backgroundColor: Colors.transparent, // Optional: Set background color if needed
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: AssetImage("assets/user.png"),
+                        fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
                       ),
                     ),
                   ),
-                  SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          userData['username'] ?? 'Unknown', // Display the username
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        Text(userData['email'] ?? 'No email available'), // Display the email
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            );
-          } else {
-            return Text("No user data available");
-          }
-        } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+                ),
+                SizedBox(height: 10), // Space between the avatar and the text
+                Text(
+                  userData['username'] ?? 'Unknown', // Display the username
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  userData['email'] ?? 'No email available', // Display the email
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
         } else {
-          return Text("Unable to load user data");
+          return Text("No user data available");
         }
-      },
-    );
-  }
+      } else if (snapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      } else {
+        return Text("Unable to load user data");
+      }
+    },
+  );
+}
+
 
   Widget _buildFavoritesSection(User user, String favoriteField, String collectionName) {
   return FutureBuilder<DocumentSnapshot>(
