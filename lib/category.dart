@@ -133,7 +133,7 @@ class _CategoryPageState extends State<CategoryPage> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
+                              child: Image.asset(
                                 item['image'] != null ? item['image'] : 'assets/picaßo.png',
                                 fit: BoxFit.cover,
                                 width: double.infinity,

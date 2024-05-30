@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:picasso/artist.dart';
+import 'package:picasso/movement.dart';
+import 'package:picasso/museum.dart';
 import 'package:picasso/navbar.dart';
 import 'login.dart';
 import 'artwork.dart';
-import 'main.dart'; // Import the main file to access routeObserver
+import 'main.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -13,52 +16,59 @@ class FavoritesPage extends StatefulWidget {
   _FavoritesPageState createState() => _FavoritesPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
+class _FavoritesPageState extends State<FavoritesPage> with RouteAware, SingleTickerProviderStateMixin {
   final int _currentIndex = 2;
+  TabController? _tabController;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
   void dispose() {
-    routeObserver.unsubscribe(this);
+    _tabController?.dispose();
     super.dispose();
   }
 
-  @override
-  void didPopNext() {
-    // Called when the current route has been popped off, and the user returns to this route
-    setState(() {
-      // Trigger a rebuild to refresh the favorites list
-    });
-  }
+  void navigateToDetailPage(Map<String, dynamic> itemData, String category) {
+    Widget page;
+    if (category == 'artworks') {
+      page = ArtworkDetailPage(artworkId: itemData['id']);
+    } else if (category == 'movements') {
+      page = MovementPage(movementData: itemData);
+    } else if (category == 'museums') {
+      page = MuseumPage(museumData: itemData);
+    } else if (category == 'artists') {
+      page = ArtistPage(artistData: itemData);
+    } else {
+      // Default to a generic detail page or an error page
+      page = Text("No detail page for this category");
+    }
 
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => page
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('Favorites'),
         actions: [
           IconButton(
             icon: const Icon(Icons.exit_to_app),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
-
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => LoginPage()),
               );
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("You have successfully logged out"),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              });
             },
           ),
         ],
@@ -79,17 +89,32 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
             return const Center(child: Text('Please log in to see your favorites.'));
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              children: [
-                _buildProfileHeader(user),
-                _buildFavoritesSection(user, 'Artworks', 'favorites', 'artworks'),
-                _buildFavoritesSection(user, 'Museums', 'favoriteMuseums', 'museums'),
-                _buildFavoritesSection(user, 'Movements', 'favoriteMovements', 'movements'),
-                _buildFavoritesSection(user, 'Artists', 'favoriteArtists', 'artists'),
-              ],
-            ),
+          return Column(
+            children: [
+              _buildProfileHeader(user),
+              TabBar(
+                controller: _tabController,
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                tabs: [
+                  Tab(text: 'Artwork'),
+                  Tab(text: 'Artist'),
+                  Tab(text: 'Museum'),
+                  Tab(text: 'Movement'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildFavoritesSection(user, 'favorites', 'artworks'),
+                    _buildFavoritesSection(user, 'favoriteArtists', 'artists'),
+                    _buildFavoritesSection(user, 'favoriteMuseums', 'museums'),
+                    _buildFavoritesSection(user, 'favoriteMovements', 'movements'),
+                  ],
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -112,7 +137,7 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
                     radius: 40,
                     backgroundColor: Colors.transparent,
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           image: AssetImage("assets/user.png"),
@@ -122,14 +147,14 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
                       ),
                     ),
                   ),
-                  SizedBox(width: 20),
+                  const SizedBox(width: 20),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           userData['username'] ?? 'Unknown',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         Text(userData['email'] ?? 'No email available'),
                       ],
@@ -139,18 +164,18 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
               ),
             );
           } else {
-            return Text("No user data available");
+            return const Text("No user data available");
           }
         } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         } else {
-          return Text("Unable to load user data");
+          return const Text("Unable to load user data");
         }
       },
     );
   }
 
-  Widget _buildFavoritesSection(User user, String title, String favoriteField, String collectionName) {
+  Widget _buildFavoritesSection(User user, String favoriteField, String collectionName) {
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
@@ -164,69 +189,88 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
               stream: FirebaseFirestore.instance.collection(collectionName).where(FieldPath.documentId, whereIn: favoriteIds).snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 20),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        
-                      ),
-                      SizedBox(
-                        height: 200,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: snapshot.data!.docs.length,
-                          itemBuilder: (context, index) {
-                            var item = snapshot.data!.docs[index];
-                            return GestureDetector(
-                              onTap: () {
-                                if (collectionName == 'artworks') {
-                                  Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ArtworkDetailPage(artworkId: item.id),
+                  return GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: snapshot.data!.docs.length,
+                    itemBuilder: (context, index) {
+                      var item = snapshot.data!.docs[index]; // Assuming snapshot.data is a QuerySnapshot.
+                      return GestureDetector(
+                        onTap: () => navigateToDetailPage(item.data() as Map<String, dynamic>, collectionName), // Implement or replace navigateToDetailPage function accordingly.
+                        child: Container(
+                          margin: EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.asset(
+                                  item['image'] != null ? item['image'] : 'assets/picaßo.png', // Default image if 'image' key is null.
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
                                 ),
-                              );
-                                } else if (collectionName == 'museums') {
-                                  Navigator.pushNamed(context, '/museum', arguments: item.data());
-                                } else if (collectionName == 'movements') {
-                                  Navigator.pushNamed(context, '/movement', arguments: item.data());
-                                } else if (collectionName == 'artists') {
-                                  Navigator.pushNamed(context, '/artist', arguments: {
-                                  'id': item.id,
-                                  'image': item['image'],
-                                  'name': item['name'],
-                                  'deathdate': item['deathdate'],
-                                  'birthdate': item['birthdate'],
-                                  'description': item['description']});
-                                }
-                              },
-                              child: Container(
-                                width: 140,
-                                margin: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: AssetImage(item['image']),
-                                    fit: BoxFit.cover,
+                              ),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  height: 50,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        Colors.black.withOpacity(0.6),
+                                        Colors.transparent,
+                                      ],
+                                      stops: [0.6, 1.0],
+                                    ),
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                  ),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(left: 8.0),
+                                      child: Text(
+                                        item['name'] ?? 'No Name',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                alignment: Alignment.center,
                               ),
-                            );
-                          },
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   );
+
                 } else if (snapshot.hasError) {
                   return Text("Error: ${snapshot.error}");
                 } else {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
               },
             );
@@ -234,7 +278,7 @@ class _FavoritesPageState extends State<FavoritesPage> with RouteAware {
             return Text("No favorite $collectionName found.");
           }
         } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         } else {
           return Text("Unable to load favorite $collectionName.");
         }
