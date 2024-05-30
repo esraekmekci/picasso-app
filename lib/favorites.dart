@@ -202,7 +202,14 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                                   var item = snapshot.data!.docs[index];
                                   return GestureDetector(
                                     onTap: () {
-                                      Navigator.pushNamed(context, '/museum', arguments: item.data());
+                                      Navigator.pushNamed(context, '/museum', arguments: {
+                                        'id': item.id, // Document id
+                                        'city': item['city'],
+                                        'country': item['country'],
+                                        'image': item['image'],
+                                        'name': item['name'],
+                                        'description': item['description'],
+                                      });
                                     },
                                     child: Container(
                                       margin: const EdgeInsets.symmetric(vertical: 5),
@@ -267,7 +274,13 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                                           ),
                                         );
                                       } else if (collectionName == 'movements') {
-                                        Navigator.pushNamed(context, '/movement', arguments: item.data());
+                                        Navigator.pushNamed(context, '/movement', arguments: 
+                                          {
+                                            'id': item.id,
+                                            'name': item['name'],
+                                            'description': item['description'],
+                                            'image': item['image'],
+                                          });
                                       } else if (collectionName == 'artists') {
                                         Navigator.pushNamed(context, '/artist', arguments: {
                                           'id': item.id, // Document id
