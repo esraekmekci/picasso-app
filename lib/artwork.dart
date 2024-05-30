@@ -43,7 +43,10 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
   @override
   void didPopNext() {
     // Called when the current route has been popped off, and the user returns to this route
-    checkIfLiked(widget.artworkId);
+    setState(() {
+      artworkData = getArtwork(widget.artworkId);
+      checkIfLiked(widget.artworkId); // Recheck if the artwork is liked
+    });
   }
 
   Future<Map<String, dynamic>> getArtwork(String artworkId) async {
@@ -84,31 +87,32 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
     };
   }
 
-  Future<void> toggleFavorite(String artworkId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+Future<void> toggleFavorite(String artworkId) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
+  final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+  final doc = await userRef.get();
 
-    if (doc.exists) {
-      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
-      if (favorites.contains(artworkId)) {
-        // Remove from favorites
-        await userRef.update({
-          'favorites': FieldValue.arrayRemove([artworkId])
-        });
-      } else {
-        // Add to favorites
-        await userRef.update({
-          'favorites': FieldValue.arrayUnion([artworkId])
-        });
-      }
-      setState(() {
-        isLiked = !isLiked;
+  if (doc.exists) {
+    List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+    if (favorites.contains(artworkId)) {
+      // Remove from favorites
+      await userRef.update({
+        'favorites': FieldValue.arrayRemove([artworkId])
+      });
+    } else {
+      // Add to favorites
+      await userRef.update({
+        'favorites': FieldValue.arrayUnion([artworkId])
       });
     }
+    setState(() {
+      isLiked = !isLiked;
+    });
   }
+}
+
 
   Future<void> checkIfLiked(String artworkId) async {
     final user = FirebaseAuth.instance.currentUser;

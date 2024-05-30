@@ -1,10 +1,12 @@
-import 'package:picasso/navbar.dart';import 'package:flutter/material.dart';
+import 'package:picasso/navbar.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/appbar.dart';
 import 'expandable_text.dart';
-import 'artwork.dart'; // Yeni oluşturduğumuz sayfanın dosya yolunu ekliyoruz
+import 'artwork.dart';
+import 'main.dart'; // Import the main file to access routeObserver
 import 'dart:async';
 
 class ArtistPage extends StatefulWidget {
@@ -15,7 +17,7 @@ class ArtistPage extends StatefulWidget {
   _ArtistPageState createState() => _ArtistPageState();
 }
 
-class _ArtistPageState extends State<ArtistPage> {
+class _ArtistPageState extends State<ArtistPage> with RouteAware {
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   late Future<String> artistDatas;
   final int _currentIndex = 0;
@@ -34,11 +36,32 @@ class _ArtistPageState extends State<ArtistPage> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    setState(() {
+      artistDatas = getArtist();
+      checkIfLiked(); // Check if the artist is liked again when coming back
+    });
+  }
+
   Future<bool> checkIfLiked() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return false;
     String aid = '';
-    artistDatas.then((value) {
+    await artistDatas.then((value) {
       aid = value;
     });
     final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
@@ -46,7 +69,6 @@ class _ArtistPageState extends State<ArtistPage> {
 
     if (doc.exists) {
       List<dynamic> favoriteArtists = doc.data()?['favoriteArtists'] ?? [];
-
       return favoriteArtists.contains(aid);
     }
     return false;
@@ -78,15 +100,13 @@ class _ArtistPageState extends State<ArtistPage> {
     if (doc.exists) {
       List<dynamic> favoriteArtists = doc.data()?['favoriteArtists'] ?? [];
       if (favoriteArtists.contains(artistId)) {
-        // Remove from favorites
         await userRef.update({
           'favoriteArtists': FieldValue.arrayRemove([artistId])
         });
       } else {
-        // Add to favorites
         await userRef.update({
           'favoriteArtists': FieldValue.arrayUnion([artistId])
-        });
+        }); 
       }
       setState(() {});
     }
@@ -135,7 +155,6 @@ class _ArtistPageState extends State<ArtistPage> {
       (widget.artistData['deathdate']?.seconds ?? 0) * 1000,
     );
 
-    // Format the DateTime to a readable string
     String formattedBirthDate = DateFormat('dd MMM yyyy').format(birthDate);
     String formattedDeathDate = DateFormat('dd MMM yyyy').format(deathDate);
     return Scaffold(
@@ -258,5 +277,3 @@ class _ArtistPageState extends State<ArtistPage> {
     );
   }
 }
-
-
