@@ -21,6 +21,7 @@ class CategoryPage extends StatefulWidget {
 class _CategoryPageState extends State<CategoryPage> {
   StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
   TextEditingController _searchController = TextEditingController();
+  List<dynamic> _allItems = []; // Store all items initially
 
   @override
   void initState() {
@@ -31,86 +32,35 @@ class _CategoryPageState extends State<CategoryPage> {
 
   void _onSearchChanged() {
     if (_searchController.text.isEmpty) {
-      _fetchItems();  // Fetch all items if search query is cleared
+      _itemsController.add(_allItems);  // Show all items if search query is cleared
     } else {
-      _fetchItems(query: _searchController.text);
+      _filterItems(_searchController.text);
     }
   }
 
-/*
-void _fetchItems({String query = ''}) async {
-  print("Received query: '$query'");  // Debugging the received query input
-  String normalizedQuery = query.toLowerCase();
-
-  Query queryBuilder = FirebaseFirestore.instance.collection(widget.category);
-  
-  if (query.isNotEmpty) {
-    String normalizedQuery = query.toLowerCase();
-    String upperBound = normalizedQuery.substring(0, 1).toUpperCase() + normalizedQuery.substring(1);
-
-    print("Normalized query: '$normalizedQuery', Upper bound: '$upperBound'");
-
-    queryBuilder = queryBuilder
-        .orderBy('name')
-        .startAt([normalizedQuery])
-        .endAt([upperBound + '\uf8ff']);
-  } else {
-    print("Query is empty, fetching all documents.");
+  void _fetchItems() async {
+    FirebaseFirestore.instance.collection(widget.category).get().then((snapshot) {
+      _allItems = snapshot.docs.map((doc) => {
+        ...doc.data() as Map<String, dynamic>,
+        'id': doc.id,
+      }).toList();
+      _itemsController.add(_allItems);
+    }).catchError((error) {
+      _itemsController.addError(error);
+      print("Error fetching data: $error");
+    });
   }
 
-  queryBuilder.snapshots().listen((snapshot) {
-    print("Fetched ${snapshot.docs.length} documents.");  // Debugging the number of documents fetched
-
-    final items = snapshot.docs.map((doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      data['id'] = doc.id;  // Include document ID in data
-      return data;
-    }).where((item) {
+  void _filterItems(String query) {
+    print(query);
+    final filteredItems = _allItems.where((item) {
       final name = item['name'] as String;
-
-      // Debug each item's name to check matching criteria
-      print("Document Name: '$name', Query: '$normalizedQuery', Matches: ${name.toLowerCase().contains(normalizedQuery)}");
-      return name.toLowerCase().contains(normalizedQuery);
-    }).toList();
-
-    print("Filtered to ${items.length} items.");  // Debugging the number of items after filtering
-    _itemsController.add(items);
-  }, onError: (error) {
-    _itemsController.addError(error);
-    print("Error fetching data: $error");
-  });
-}
-*/
-
-void _fetchItems({String query = ''}) async {
-  Query queryBuilder = FirebaseFirestore.instance.collection(widget.category);
-  if (query.isNotEmpty) {
-    // Fetch documents where the name starts with the query
-    queryBuilder = queryBuilder
-        .orderBy('name')
-        .startAt([query])
-        .endAt([query + '\uf8ff']);
-  }
-  
-  queryBuilder.snapshots().listen((snapshot) {
-    final items = snapshot.docs.map((doc) => {
-      ...doc.data() as Map<String, dynamic>,
-      'id': doc.id,
-    }).where((item) {
-      // Further filter the items client-side for substring matching
-      final name = item['name'] as String;
-      print("Query: $query");
-      print(query.toLowerCase());
-      print(name.toLowerCase());
+      print(name);
       return name.toLowerCase().contains(query.toLowerCase());
     }).toList();
-
-    _itemsController.add(items);
-  }, onError: (error) {
-    _itemsController.addError(error);
-    print("Error fetching data: $error");
-  });
-}
+    print("Filtered items: $filteredItems");
+    _itemsController.add(filteredItems);
+  }
 
   @override
   void dispose() {
@@ -136,11 +86,10 @@ void _fetchItems({String query = ''}) async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => page
+        builder: (context) => page,
       ),
     );
   }
-
 
   Widget buildItemsList() {
     return StreamBuilder<List<dynamic>>(
