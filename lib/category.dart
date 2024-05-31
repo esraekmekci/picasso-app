@@ -7,6 +7,7 @@ import 'package:picasso/artwork.dart';
 import 'package:picasso/movement.dart';
 import 'package:picasso/museum.dart';
 import 'package:picasso/artist.dart';
+import 'dart:async';
 
 class CategoryPage extends StatefulWidget {
   final String category;
@@ -18,20 +19,104 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  late Future<List<dynamic>> items;
+  StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    items = fetchItems();
+    _searchController.addListener(_onSearchChanged);
+    _fetchItems();  // Initially fetch all items
   }
 
-  Future<List<dynamic>> fetchItems() async {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection(widget.category).get();
-    return snapshot.docs.map((doc) => {
+  void _onSearchChanged() {
+    if (_searchController.text.isEmpty) {
+      _fetchItems();  // Fetch all items if search query is cleared
+    } else {
+      _fetchItems(query: _searchController.text);
+    }
+  }
+
+/*
+void _fetchItems({String query = ''}) async {
+  print("Received query: '$query'");  // Debugging the received query input
+  String normalizedQuery = query.toLowerCase();
+
+  Query queryBuilder = FirebaseFirestore.instance.collection(widget.category);
+  
+  if (query.isNotEmpty) {
+    String normalizedQuery = query.toLowerCase();
+    String upperBound = normalizedQuery.substring(0, 1).toUpperCase() + normalizedQuery.substring(1);
+
+    print("Normalized query: '$normalizedQuery', Upper bound: '$upperBound'");
+
+    queryBuilder = queryBuilder
+        .orderBy('name')
+        .startAt([normalizedQuery])
+        .endAt([upperBound + '\uf8ff']);
+  } else {
+    print("Query is empty, fetching all documents.");
+  }
+
+  queryBuilder.snapshots().listen((snapshot) {
+    print("Fetched ${snapshot.docs.length} documents.");  // Debugging the number of documents fetched
+
+    final items = snapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      data['id'] = doc.id;  // Include document ID in data
+      return data;
+    }).where((item) {
+      final name = item['name'] as String;
+
+      // Debug each item's name to check matching criteria
+      print("Document Name: '$name', Query: '$normalizedQuery', Matches: ${name.toLowerCase().contains(normalizedQuery)}");
+      return name.toLowerCase().contains(normalizedQuery);
+    }).toList();
+
+    print("Filtered to ${items.length} items.");  // Debugging the number of items after filtering
+    _itemsController.add(items);
+  }, onError: (error) {
+    _itemsController.addError(error);
+    print("Error fetching data: $error");
+  });
+}
+*/
+
+void _fetchItems({String query = ''}) async {
+  Query queryBuilder = FirebaseFirestore.instance.collection(widget.category);
+  if (query.isNotEmpty) {
+    // Fetch documents where the name starts with the query
+    queryBuilder = queryBuilder
+        .orderBy('name')
+        .startAt([query])
+        .endAt([query + '\uf8ff']);
+  }
+  
+  queryBuilder.snapshots().listen((snapshot) {
+    final items = snapshot.docs.map((doc) => {
       ...doc.data() as Map<String, dynamic>,
       'id': doc.id,
+    }).where((item) {
+      // Further filter the items client-side for substring matching
+      final name = item['name'] as String;
+      print("Query: $query");
+      print(query.toLowerCase());
+      print(name.toLowerCase());
+      return name.toLowerCase().contains(query.toLowerCase());
     }).toList();
+
+    _itemsController.add(items);
+  }, onError: (error) {
+    _itemsController.addError(error);
+    print("Error fetching data: $error");
+  });
+}
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _itemsController.close();
+    super.dispose();
   }
 
   void navigateToDetailPage(Map<String, dynamic> itemData) {
@@ -45,7 +130,6 @@ class _CategoryPageState extends State<CategoryPage> {
     } else if (widget.category == 'artists') {
       page = ArtistPage(artistData: itemData);
     } else {
-      // Default to a generic detail page or an error page
       page = Text("No detail page for this category");
     }
 
@@ -53,6 +137,105 @@ class _CategoryPageState extends State<CategoryPage> {
       context,
       MaterialPageRoute(
         builder: (context) => page
+      ),
+    );
+  }
+
+
+  Widget buildItemsList() {
+    return StreamBuilder<List<dynamic>>(
+      stream: _itemsController.stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text("An error occurred: ${snapshot.error}"));
+        }
+        if (snapshot.data!.isEmpty) {
+          return const Center(child: Text("No items found"));
+        }
+        return GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: snapshot.data!.length,
+          itemBuilder: (context, index) {
+            var item = snapshot.data![index];
+            return GestureDetector(
+              onTap: () => navigateToDetailPage(item),
+              child: buildItemCard(item),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildItemCard(Map<String, dynamic> item) {
+    return Container(
+      margin: EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              item['image'] != null ? item['image'] : 'assets/picaßo.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 50,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.transparent,
+                  ],
+                  stops: [0.6, 1.0],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(10),
+                  bottomRight: Radius.circular(10),
+                ),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 8.0),
+                  child: Text(
+                    item['name'] ?? 'No Name',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -69,6 +252,7 @@ class _CategoryPageState extends State<CategoryPage> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search',
                       prefixIcon: const Icon(Icons.search),
@@ -93,99 +277,7 @@ class _CategoryPageState extends State<CategoryPage> {
               ],
             ),
           ),
-          Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: items,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text("An error occurred: ${snapshot.error}"));
-                }
-                if (snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No items found"));
-                }
-                return GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.8,
-                  ),
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    var item = snapshot.data![index];
-                    return GestureDetector(
-                      onTap: () => navigateToDetailPage(item),
-                      child: Container(
-                        margin: EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(
-                                item['image'] != null ? item['image'] : 'assets/picaßo.png',
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
-                            ),
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Container(
-                                height: 50,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      Colors.black.withOpacity(0.6),
-                                      Colors.transparent,
-                                    ],
-                                    stops: [0.6, 1.0],
-                                  ),
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
-                                  ),
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(left: 8.0),  // Metne sol taraftan boşluk eklemek için
-                                    child: Text(
-                                      item['name'] ?? 'No Name',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: buildItemsList()),
         ],
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
