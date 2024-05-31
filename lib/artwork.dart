@@ -6,7 +6,6 @@ import 'package:picasso/appbar.dart';
 import 'artist.dart'; // Make sure this import path is correct
 import 'package:picasso/navbar.dart';
 import 'main.dart'; // Import the main file to access routeObserver
-import 'package:google_fonts/google_fonts.dart';
 
 class ArtworkDetailPage extends StatefulWidget {
   final String artworkId;
@@ -83,24 +82,8 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
         'birthdate': artistSnapshot['birthdate'],
         'description': artistSnapshot['description'],
       },
-      
-      'movements': movementSnapshots.map((snapshot) {
-        return {
-          'id': snapshot.id,
-          'name': snapshot['name'],
-          'description': snapshot['description'],
-          'image': snapshot['image'],
-        };
-      }).toList(),
-
-      'museum': {
-            'id': museumSnapshot.id, // Document id
-            'city': museumSnapshot['city'],
-            'country': museumSnapshot['country'],
-            'image': museumSnapshot['image'],
-            'name': museumSnapshot['name'],
-            'description': museumSnapshot['description'],
-          },   
+      'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
+      'museum': (museumSnapshot.data() as Map<String, dynamic>?),
     };
   }
 
@@ -183,14 +166,13 @@ Future<void> toggleFavorite(String artworkId) async {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                              Text(
-                                data['name'],
-                                style: GoogleFonts.cormorantUpright(
-                                  fontSize: 35,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                )
-                              ),
+                          Text(
+                            data['name'],
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           IconButton(
                             icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
                             color: Colors.red,
