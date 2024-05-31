@@ -5,6 +5,7 @@ import 'expandable_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'artwork.dart';
+import 'main.dart';
 
 
 class MovementPage extends StatefulWidget {
@@ -15,10 +16,11 @@ class MovementPage extends StatefulWidget {
     _MovementPageState createState() => _MovementPageState();
 }
 
-class _MovementPageState extends State<MovementPage> {
+class _MovementPageState extends State<MovementPage> with RouteAware {
   late Future<String> movementDatas;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   final int _currentIndex = 0;
+  bool isLiked = false;
 
   @override
   void initState() {
@@ -27,7 +29,7 @@ class _MovementPageState extends State<MovementPage> {
     movementDatas.then((value){
       print(value);
     });
-
+    checkIfLiked();
     if (widget.movementData['id'] != null && widget.movementData['id'].isNotEmpty) {
       artworkDataList = getArtworksByMovement(widget.movementData['id']);
     } else {
@@ -35,6 +37,26 @@ class _MovementPageState extends State<MovementPage> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    setState(() {
+      movementDatas = getMovement();
+      checkIfLiked(); // Check if the artist is liked again when coming back
+    });
+  }
 
   Future<List<Map<String, dynamic>>> getArtworksByMovement(String movementId) async {
     if (movementId.isEmpty) {
@@ -109,7 +131,7 @@ class _MovementPageState extends State<MovementPage> {
         });
       }
       setState(() {
-        
+        isLiked = !isLiked;
       });
     }
   }

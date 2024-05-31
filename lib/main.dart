@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:picasso/category.dart';
 import 'firebase_options.dart';
 import 'discover.dart';
@@ -30,6 +31,11 @@ class PicassoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Picasßo',
+      theme: ThemeData(
+        primarySwatch: Colors.amber,
+        fontFamily: GoogleFonts.quicksand().fontFamily,
+      ),
       home: LoginPage(),
       navigatorObservers: [routeObserver], // Add the RouteObserver here
       routes: {

@@ -36,13 +36,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: Icon(Icons.exit_to_app, color: Colors.amber.shade600),
               onPressed: () async {
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacement(
+                // Tüm rotaları kaldırarak ve LoginPage'ye yönlendirerek başlar
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => LoginPage()),
+                  (Route<dynamic> route) => false,
                 );
+                // LoginPage yüklendikten sonra bir SnackBar göster
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text("You have successfully logged out"),
                       duration: Duration(seconds: 2),
                     ),

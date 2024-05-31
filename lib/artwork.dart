@@ -6,6 +6,7 @@ import 'package:picasso/appbar.dart';
 import 'artist.dart'; // Make sure this import path is correct
 import 'package:picasso/navbar.dart';
 import 'main.dart'; // Import the main file to access routeObserver
+import 'package:google_fonts/google_fonts.dart';
 
 class ArtworkDetailPage extends StatefulWidget {
   final String artworkId;
@@ -88,7 +89,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
           'id': snapshot.id,
           'name': snapshot['name'],
           'description': snapshot['description'],
-          'image': museumSnapshot['image'],
+          'image': snapshot['image'],
         };
       }).toList(),
 
@@ -182,13 +183,14 @@ Future<void> toggleFavorite(String artworkId) async {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            data['name'],
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                              Text(
+                                data['name'],
+                                style: GoogleFonts.cormorantUpright(
+                                  fontSize: 35,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                )
+                              ),
                           IconButton(
                             icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
                             color: Colors.red,

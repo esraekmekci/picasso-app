@@ -7,6 +7,7 @@ import 'package:picasso/appbar.dart';
 import 'package:picasso/navbar.dart';
 import 'expandable_text.dart';
 import 'artwork.dart';
+import 'main.dart';
 
 class MuseumPage extends StatefulWidget {
   final dynamic museumData;
@@ -16,7 +17,7 @@ class MuseumPage extends StatefulWidget {
   _MuseumPageState createState() => _MuseumPageState();
 }
 
-class _MuseumPageState extends State<MuseumPage> {
+class _MuseumPageState extends State<MuseumPage> with RouteAware {
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   late Future<String> museumDatas;
   final int _currentIndex = 0;
@@ -35,6 +36,27 @@ class _MuseumPageState extends State<MuseumPage> {
       print("Museum ID is empty or null");
     }
 
+  }
+
+    @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    setState(() {
+      museumDatas = getMuseum();
+      checkIfLiked(); // Check if the artist is liked again when coming back
+    });
   }
 
   Future<List<Map<String, dynamic>>> getArtworksByMuseum(String museumId) async {
