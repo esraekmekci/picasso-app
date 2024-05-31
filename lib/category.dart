@@ -22,43 +22,57 @@ class _CategoryPageState extends State<CategoryPage> {
   StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
   TextEditingController _searchController = TextEditingController();
   List<dynamic> _allItems = []; // Store all items initially
+  Map<String, dynamic> _artistsMap = {}; // Store all artists
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _fetchItems();  // Initially fetch all items
+    _fetchData(); // Initially fetch all items and artists
   }
 
   void _onSearchChanged() {
-    if (_searchController.text.isEmpty) {
-      _itemsController.add(_allItems);  // Show all items if search query is cleared
-    } else {
-      _filterItems(_searchController.text);
+    _filterItems(_searchController.text);
+  }
+
+  Future<void> _fetchData() async {
+    await Future.wait([_fetchItems(), _fetchArtists()]);
+    _filterItems(''); // Initially show all items
+  }
+
+  Future<void> _fetchItems() async {
+    final snapshot = await FirebaseFirestore.instance.collection(widget.category).get();
+    _allItems = snapshot.docs.map((doc) => {
+      ...doc.data() as Map<String, dynamic>,
+      'id': doc.id,
+    }).toList();
+  }
+
+  Future<void> _fetchArtists() async {
+    final snapshot = await FirebaseFirestore.instance.collection('artists').get();
+    for (var doc in snapshot.docs) {
+      _artistsMap[doc.id] = doc.data();
     }
   }
 
-  void _fetchItems() async {
-    FirebaseFirestore.instance.collection(widget.category).get().then((snapshot) {
-      _allItems = snapshot.docs.map((doc) => {
-        ...doc.data() as Map<String, dynamic>,
-        'id': doc.id,
-      }).toList();
-      _itemsController.add(_allItems);
-    }).catchError((error) {
-      _itemsController.addError(error);
-      print("Error fetching data: $error");
-    });
-  }
-
   void _filterItems(String query) {
-    print(query);
     final filteredItems = _allItems.where((item) {
       final name = item['name'] as String;
-      print(name);
-      return name.toLowerCase().contains(query.toLowerCase());
+      bool matchesName = name.toLowerCase().contains(query.toLowerCase());
+
+      if (widget.category == 'artworks') {
+        final DocumentReference<Object?>? artistRef = item['artist']! as DocumentReference?;
+        if (artistRef != null) {
+          final artistId = artistRef.id;
+          if (artistId != null && _artistsMap.containsKey(artistId)) {
+            final artistName = _artistsMap[artistId]['name'] as String;
+            return matchesName || artistName.toLowerCase().contains(query.toLowerCase());
+          }
+        }
+      }
+
+      return matchesName;
     }).toList();
-    print("Filtered items: $filteredItems");
     _itemsController.add(filteredItems);
   }
 
