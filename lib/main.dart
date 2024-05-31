@@ -12,6 +12,7 @@ import 'login.dart';
 import 'signup.dart';
 import 'filter.dart';
 import 'artwork.dart';
+import 'admin.dart';
 
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -38,6 +39,8 @@ class PicassoApp extends StatelessWidget {
         '/daily': (context) => const ArtDetailsPage(),
         '/discover': (context) => const DiscoverPage(),
         '/favorites': (context) => const FavoritesPage(),
+        '/admin': (context) =>  AddArtworkPage(),
+
       },
       onGenerateRoute: (RouteSettings settings) {
         if (settings.name == '/artist') {
