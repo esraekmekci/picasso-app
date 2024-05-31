@@ -162,7 +162,7 @@ Future<void> _loadDropdownData() async {
         'publishdate': (formData['publishdate'] as DateTime?),
         'artist': _db.doc('artists/${formData['artist']}'),
         'museum': _db.doc('museums/${formData['museum']}'),
-        'movements': (formData['movements'] as List<String?>).map((e) => _db.doc('movements/$e')).toList(),
+        'movement': (formData['movements'] as List<String?>).map((e) => _db.doc('movements/$e')).toList(),
         'year': int.tryParse(formData['year']),
       }).then((result) {
         print('Artwork Added');

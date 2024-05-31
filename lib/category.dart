@@ -12,17 +12,17 @@ import 'dart:async';
 class CategoryPage extends StatefulWidget {
   final String category;
 
-  const CategoryPage({Key? key, required this.category}) : super(key: key);
+  const CategoryPage({super.key, required this.category});
 
   @override
   _CategoryPageState createState() => _CategoryPageState();
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
-  TextEditingController _searchController = TextEditingController();
+  final StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
+  final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allItems = []; // Store all items initially
-  Map<String, dynamic> _artistsMap = {}; // Store all artists
+  final Map<String, dynamic> _artistsMap = {}; // Store all artists
 
   @override
   void initState() {
@@ -43,7 +43,7 @@ class _CategoryPageState extends State<CategoryPage> {
   Future<void> _fetchItems() async {
     final snapshot = await FirebaseFirestore.instance.collection(widget.category).get();
     _allItems = snapshot.docs.map((doc) => {
-      ...doc.data() as Map<String, dynamic>,
+      ...doc.data(),
       'id': doc.id,
     }).toList();
   }
@@ -64,7 +64,7 @@ class _CategoryPageState extends State<CategoryPage> {
         final DocumentReference<Object?>? artistRef = item['artist']! as DocumentReference?;
         if (artistRef != null) {
           final artistId = artistRef.id;
-          if (artistId != null && _artistsMap.containsKey(artistId)) {
+          if (_artistsMap.containsKey(artistId)) {
             final artistName = _artistsMap[artistId]['name'] as String;
             return matchesName || artistName.toLowerCase().contains(query.toLowerCase());
           }
@@ -94,7 +94,7 @@ class _CategoryPageState extends State<CategoryPage> {
     } else if (widget.category == 'artists') {
       page = ArtistPage(artistData: itemData);
     } else {
-      page = Text("No detail page for this category");
+      page = const Text("No detail page for this category");
     }
 
     Navigator.push(
@@ -138,7 +138,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
   Widget buildItemCard(Map<String, dynamic> item) {
     return Container(
-      margin: EdgeInsets.all(5),
+      margin: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
@@ -155,7 +155,7 @@ class _CategoryPageState extends State<CategoryPage> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.asset(
-              item['image'] != null ? item['image'] : 'assets/picaßo.png',
+              item['image'] ?? 'assets/picaßo.png',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
@@ -176,7 +176,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   ],
                   stops: [0.6, 1.0],
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(10),
                   bottomRight: Radius.circular(10),
                 ),
@@ -184,10 +184,10 @@ class _CategoryPageState extends State<CategoryPage> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: EdgeInsets.only(left: 8.0),
+                  padding: const EdgeInsets.only(left: 8.0),
                   child: Text(
                     item['name'] ?? 'No Name',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -229,7 +229,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.filter_list),
+                  icon: const Icon(Icons.filter_list),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
