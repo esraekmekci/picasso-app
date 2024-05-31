@@ -1,6 +1,9 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:picasso/appbar.dart';
 import 'package:picasso/navbar.dart';
 import 'login.dart';
 import 'artwork.dart';
@@ -47,31 +50,7 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("You have successfully logged out"),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              });
-            },
-          ),
-        ],
-        automaticallyImplyLeading: false,
-      ),
+      appBar: CustomAppBar(isFavoritesPage: true), // Add isFavoritesPage parameter to CustomAppBar(
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -97,8 +76,8 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                 tabs: [
                   Tab(text: 'Artwork'),
                   Tab(text: 'Artist'),
-                  Tab(text: 'Museum'),
                   Tab(text: 'Movement'),
+                  Tab(text: 'Museum'),
                 ],
               ),
               Expanded(
@@ -107,8 +86,8 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                   children: [
                     _buildFavoritesSection(user, 'favorites', 'artworks'),
                     _buildFavoritesSection(user, 'favoriteArtists', 'artists'),
-                    _buildFavoritesSection(user, 'favoriteMuseums', 'museums'),
                     _buildFavoritesSection(user, 'favoriteMovements', 'movements'),
+                    _buildFavoritesSection(user, 'favoriteMuseums', 'museums'),
                   ],
                 ),
               ),
@@ -119,58 +98,93 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
       bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
-Widget _buildProfileHeader(User user) {
-  return FutureBuilder<DocumentSnapshot>(
-    future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.done) {
-        var userData = snapshot.data?.data() as Map<String, dynamic>?; // Safe access using '?.'
-        if (userData != null) { // Check if userData is not null before using it
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 40, // Keep the avatar size
-                  backgroundColor: Colors.transparent, // Optional: Set background color if needed
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage("assets/user.png"),
-                        fit: BoxFit.contain, // This will make sure the image is scaled down to fit inside the circle
-                      ),
+
+  Widget _buildProfileHeader(User user) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          var userData = snapshot.data?.data() as Map<String, dynamic>?; // Safe access using '?.'
+          if (userData != null) { // Check if userData is not null before using it
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => _showIconSelectionDialog(context, user.uid),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.transparent,
+                      backgroundImage: AssetImage(userData['icon'] ?? "assets/user.png"),
                     ),
                   ),
-                ),
-                SizedBox(height: 10), // Space between the avatar and the text
-                Text(
-                  userData['username'] ?? 'Unknown', // Display the username
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  userData['email'] ?? 'No email available', // Display the email
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
+                  SizedBox(height: 10),
+                  Text(
+                    userData['username'] ?? 'Unknown',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          } else {
+            return Text("No user data available");
+          }
+        } else if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
         } else {
-          return Text("No user data available");
+          return Text("Unable to load user data");
         }
-      } else if (snapshot.connectionState == ConnectionState.waiting) {
-        return CircularProgressIndicator();
-      } else {
-        return Text("Unable to load user data");
-      }
-    },
-  );
-}
+      },
+    );
+  }
+
+  void _showIconSelectionDialog(BuildContext context, String userId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("select an icon"),
+          content: Container(
+            width: double.minPositive, // Diyalogun genişliğini sınırla
+            child: GridView.builder(
+              shrinkWrap: true,
+              itemCount: 6, // Toplam ikon sayısı
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // Bir satırda gösterilecek ikon sayısı
+                crossAxisSpacing: 10, // Yatay boşluk
+                mainAxisSpacing: 10, // Dikey boşluk
+                childAspectRatio: 1, // İkonların boy/en oranı
+              ),
+              itemBuilder: (context, index) {
+                String iconName = 'assets/user${index + 1}.png';
+                return GestureDetector(
+                  onTap: () {
+                    _updateUserIcon(iconName, userId);
+                    Navigator.of(context).pop();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(iconName, width: 50, height: 50),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
 
 
+  Future<void> _updateUserIcon(String iconName, String userId) async {
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      'icon': iconName,
+    });
+    setState(() {});
+  }
   Widget _buildFavoritesSection(User user, String favoriteField, String collectionName) {
   return FutureBuilder<DocumentSnapshot>(
     future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
@@ -214,11 +228,11 @@ Widget _buildProfileHeader(User user) {
                                       child: Row(
                                         children: [
                                           Container(
-                                            width: MediaQuery.of(context).size.width * 2 / 3,
-                                            height: 200,
+                                            width: MediaQuery.of(context).size.width * 2.4 / 5,
+                                            height: 150,
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
-                                                image: NetworkImage(item['image']),
+                                                image: AssetImage(item['image']),
                                                 fit: BoxFit.cover,
                                               ),
                                               borderRadius: BorderRadius.circular(8),
@@ -257,7 +271,7 @@ Widget _buildProfileHeader(User user) {
                                 shrinkWrap: true,
                                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2,
-                                  childAspectRatio: 3 / 5,
+                                  childAspectRatio: 4 / 5,
                                 ),
                                 itemCount: snapshot.data!.docs.length,
                                 itemBuilder: (context, index) {
@@ -293,35 +307,47 @@ Widget _buildProfileHeader(User user) {
                                     child: Container(
                                       margin: const EdgeInsets.all(5),
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(13),
                                         image: DecorationImage(
-                                          image: NetworkImage(item['image']),
+                                          image: AssetImage(item['image']),
                                           fit: BoxFit.cover,
                                         ),
                                       ),
                                       child: Align(
                                         alignment: Alignment.bottomCenter,
                                         child: Container(
+                                          height: 50,
+                                          width: double.infinity,
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.only(
-                                              bottomLeft: Radius.circular(8),
-                                              bottomRight: Radius.circular(8),
-                                            ),
                                             gradient: LinearGradient(
-                                              colors: [Colors.black54, Colors.transparent],
                                               begin: Alignment.bottomCenter,
                                               end: Alignment.topCenter,
+                                              colors: [
+                                                Colors.black.withOpacity(0.6),
+                                                Colors.transparent,
+                                              ],
+                                              stops: [0.6, 1.0],
+                                            ),
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(13),
+                                              bottomRight: Radius.circular(13),
                                             ),
                                           ),
                                           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                                          child: Text(
-                                            item['name'],
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(left: 6.0),
+                                              child: Text(
+                                                item['name'] ?? 'No Name',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ),

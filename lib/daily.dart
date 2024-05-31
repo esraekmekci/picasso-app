@@ -6,7 +6,7 @@ import 'package:picasso/appbar.dart';
 import 'package:picasso/navbar.dart';
 import 'artist.dart'; 
 import 'main.dart';// Make sure this import path is correct
-
+import 'package:google_fonts/google_fonts.dart';
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
 
@@ -98,7 +98,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
               'id': snapshot.id,
               'name': snapshot['name'],
               'description': snapshot['description'],
-              'image': museumSnapshot['image'],
+              'image': snapshot['image'],
             };
           }).toList(),
 
@@ -217,10 +217,11 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                             children: [
                               Text(
                                 data['name'],
-                                style: TextStyle(
-                                  fontSize: 24,
+                                style: GoogleFonts.cormorantUpright(
+                                  fontSize: 35,
                                   fontWeight: FontWeight.bold,
-                                ),
+                                  color: Colors.black,
+                                )
                               ),
                               FutureBuilder<bool>(
                                 future: checkIfLiked(data['id']),
