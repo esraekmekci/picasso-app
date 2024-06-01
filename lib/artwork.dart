@@ -6,6 +6,7 @@ import 'package:picasso/appbar.dart';
 import 'artist.dart'; // Make sure this import path is correct
 import 'package:picasso/navbar.dart';
 import 'main.dart'; // Import the main file to access routeObserver
+import 'package:google_fonts/google_fonts.dart';
 
 class ArtworkDetailPage extends StatefulWidget {
   final String artworkId;
@@ -82,7 +83,6 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
         'birthdate': artistSnapshot['birthdate'],
         'description': artistSnapshot['description'],
       },
-      
       'movements': movementSnapshots.map((snapshot) {
         return {
           'id': snapshot.id,
@@ -103,32 +103,31 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
     };
   }
 
-Future<void> toggleFavorite(String artworkId) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
+  Future<void> toggleFavorite(String artworkId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-  final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-  final doc = await userRef.get();
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
 
-  if (doc.exists) {
-    List<dynamic> favorites = doc.data()?['favorites'] ?? [];
-    if (favorites.contains(artworkId)) {
-      // Remove from favorites
-      await userRef.update({
-        'favorites': FieldValue.arrayRemove([artworkId])
-      });
-    } else {
-      // Add to favorites
-      await userRef.update({
-        'favorites': FieldValue.arrayUnion([artworkId])
+    if (doc.exists) {
+      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+      if (favorites.contains(artworkId)) {
+        // Remove from favorites
+        await userRef.update({
+          'favorites': FieldValue.arrayRemove([artworkId])
+        });
+      } else {
+        // Add to favorites
+        await userRef.update({
+          'favorites': FieldValue.arrayUnion([artworkId])
+        });
+      }
+      setState(() {
+        isLiked = !isLiked;
       });
     }
-    setState(() {
-      isLiked = !isLiked;
-    });
   }
-}
-
 
   Future<void> checkIfLiked(String artworkId) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -171,103 +170,141 @@ Future<void> toggleFavorite(String artworkId) async {
                 SizedBox(height: 10),
                 Image.asset(data['image']),
                 SizedBox(height: 20),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200], // Light grey background
-                    borderRadius: BorderRadius.circular(10), // Rounded corners
-                  ),
-                  padding: const EdgeInsets.all(15),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            data['name'],
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                            color: Colors.red,
-                            onPressed: () {
-                              toggleFavorite(data['id']);
-                            },
-                          ),
-                        ],
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200], // Light grey background
+                        borderRadius: BorderRadius.circular(10), // Rounded corners
                       ),
-                      SizedBox(height: 10),
-                      Row(
+                      padding: const EdgeInsets.all(15),
+                      child: Column(
                         children: [
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ArtistPage(
-                                  artistData: {
-                                    'id': data['artist']['id'],
-                                    'image': data['artist']['image'],
-                                    'name': data['artist']['name'],
-                                    'deathdate': data['artist']['deathdate'],
-                                    'birthdate': data['artist']['birthdate'],
-                                    'description': data['artist']['description']
-                                  },
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                data['name'],
+                                style: GoogleFonts.cormorantUpright(
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200], // Light grey background
+                                  borderRadius: BorderRadius.circular(25), // Rounded corners
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
+                                      spreadRadius: 1,
+                                      blurRadius: 4,
+                                      offset: Offset(0, 1), // changes position of shadow
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            child: Chip(
-                              label: Text(data['artist']['name']),
-                              backgroundColor: Colors.green[100],
-                            ),
+                            ],
                           ),
-                          SizedBox(width: 10),
-                          Text(
-                            data['year']?.toString() ?? 'Unknown Year',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        data['description'],
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Wrap(
-                            spacing: 8.0,
-                            children: data['movements'].map<Widget>((movement) {
-                              return GestureDetector(
-                                onTap: () => Navigator.pushNamed(context, '/movement', arguments: movement),
+                          SizedBox(height: 10),
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ArtistPage(
+                                      artistData: {
+                                        'id': data['artist']['id'],
+                                        'image': data['artist']['image'],
+                                        'name': data['artist']['name'],
+                                        'deathdate': data['artist']['deathdate'],
+                                        'birthdate': data['artist']['birthdate'],
+                                        'description': data['artist']['description']
+                                      },
+                                    ),
+                                  ),
+                                ),
                                 child: Chip(
-                                  label: Text(movement['name']),
+                                  label: Text(data['artist']['name']),
                                   backgroundColor: Colors.green[100],
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                data['year']?.toString() ?? 'Unknown Year',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            data['description'],
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Wrap(
+                                spacing: 8.0,
+                                children: data['movements'].map<Widget>((movement) {
+                                  return GestureDetector(
+                                    onTap: () => Navigator.pushNamed(context, '/movement', arguments: movement),
+                                    child: Chip(
+                                      label: Text(movement['name']),
+                                      backgroundColor: Colors.green[100],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                                child: Chip(
+                                  label: Text(data['museum']['name']),
+                                  backgroundColor: Colors.green[100],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
-                            child: Chip(
-                              label: Text(data['museum']['name']),
-                              backgroundColor: Colors.green[100],
+                    ),
+                    Positioned(
+                      top: -15,
+                      right: 10,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200], // Light grey background
+                          borderRadius: BorderRadius.circular(25), // Rounded corners
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: Offset(0, 1), // changes position of shadow
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                          color: Colors.red,
+                          onPressed: () {
+                            toggleFavorite(data['id']);
+                          },
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -23,6 +23,7 @@ class _CategoryPageState extends State<CategoryPage> {
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allItems = []; // Store all items initially
   final Map<String, dynamic> _artistsMap = {}; // Store all artists
+  
 
   @override
   void initState() {
@@ -230,12 +231,18 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.filter_list),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FilterPage(category: widget.category),
-                    ),
-                  ),
+                  onPressed: () async {
+                    final filteredItems = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FilterPage(category: widget.category),
+                      ),
+                    );
+
+                    if (filteredItems != null) {
+                      _applyFilters(filteredItems);
+                    }
+                  },
                 ),
               ],
             ),
@@ -246,4 +253,10 @@ class _CategoryPageState extends State<CategoryPage> {
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
     );
   }
+
+  void _applyFilters(List<String> filteredItems) {
+  _itemsController.add(
+    _allItems.where((item) => filteredItems.contains(item['name'])).toList(),
+  );
+}
 }

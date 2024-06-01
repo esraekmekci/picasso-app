@@ -62,7 +62,7 @@ class _FilterPageState extends State<FilterPage> {
 
   void fetchPeriods() async {
     setState(() {
-      periods = ['1800s', '1900s', '2000s'];  // Example static periods
+      periods = ['1500s', '1600s', '1700s','1800s', '1900s', '2000s'];  // Example static periods
     });
   }
 
@@ -143,8 +143,62 @@ class _FilterPageState extends State<FilterPage> {
     return buildFilterTile('City', cities, () {});
   }
 
-  void applyFilters() {
-    // This method will handle the filter application logic
-    print("Filters applied with: ${selectedFilters.join(', ')}");
+void applyFilters() async {
+  List<Query> queries = [];
+  Query baseQuery = FirebaseFirestore.instance.collection(widget.category);
+
+  Map<String, List<int>> periodYearRanges = {
+    '1500s': [1500, 1599],
+    '1600s': [1600, 1699],
+    '1700s': [1700, 1799],
+    '1800s': [1800, 1899],
+    '1900s': [1900, 1999],
+    '2000s': [2000, 2099]
+  };
+
+  // Filter by periods as year ranges, if any
+  List<String> selectedPeriods = selectedFilters.where((f) => periods.contains(f)).toList();
+  if (selectedPeriods.isNotEmpty) {
+    for (var period in selectedPeriods) {
+      if (periodYearRanges.containsKey(period)) {
+        List<int> range = periodYearRanges[period]!;
+        queries.add(baseQuery.where('year', isGreaterThanOrEqualTo: range[0], isLessThanOrEqualTo: range[1]));
+      }
+    }
+  } else {
+    // If no period is selected, add the base query as a fallback
+    queries.add(baseQuery);
   }
+
+  // Filter by selected movements
+  if (selectedFilters.any((f) => movements.contains(f))) {
+    var selectedMovements = selectedFilters.where((f) => movements.contains(f)).toList();
+    var movementSnapshot = await FirebaseFirestore.instance.collection('movements')
+        .where('name', whereIn: selectedMovements)
+        .get();
+    List<DocumentReference> movementReferences = movementSnapshot.docs.map((doc) => doc.reference).toList();
+
+    if (movementReferences.isNotEmpty) {
+      for (var i = 0; i < queries.length; i++) {
+        queries[i] = queries[i].where('movement', arrayContainsAny: movementReferences);
+      }
+    }
+  }
+
+  // Execute the queries and combine the results
+  List<String> filteredArtworkNames = [];
+  for (var query in queries) {
+    var snapshot = await query.get();
+    filteredArtworkNames.addAll(snapshot.docs.map((doc) {
+      var data = doc.data();
+      return data is Map<String, dynamic> ? data['name'] as String? : null;
+    }).where((name) => name != null).cast<String>().toList());
+  }
+
+  // Remove duplicates, if any
+  filteredArtworkNames = filteredArtworkNames.toSet().toList();
+
+  // Navigate back and pass the filtered artwork names
+  Navigator.pop(context, filteredArtworkNames);
+}
 }

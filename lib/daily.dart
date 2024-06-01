@@ -20,6 +20,7 @@ class ArtDetailsPage extends StatefulWidget {
 class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
   late PageController _pageController;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
+  bool isLiked = false;
   int _currentIndex = 1;
 
   @override
@@ -35,18 +36,18 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
   }
 
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   routeObserver.unsubscribe(this);
+  //   super.dispose();
+  // }
 
-  @override
-  void didPopNext() {
-    setState(() {
-      artworkDataList = getArtworks();
-    });
-  }
+  // @override
+  // void didPopNext() {
+  //   setState(() {
+  //     artworkDataList = getArtworks();
+  //   });
+  // }
 
   Future<List<Map<String, dynamic>>> getArtworks() async {
     final DateTime now = DateTime.now();
@@ -94,8 +95,23 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
             'birthdate': artistSnapshot['birthdate'],
             'description': artistSnapshot['description'],
           },
-          'movements': movementSnapshots.map((snapshot) => snapshot.data() as Map<String, dynamic>).toList(),
-          'museum': (museumSnapshot.data() as Map<String, dynamic>?),
+          'movements': movementSnapshots.map((snapshot) {
+            return {
+              'id': snapshot.id,
+              'name': snapshot['name'],
+              'description': snapshot['description'],
+              'image': snapshot['image'],
+            };
+          }).toList(),
+
+          'museum': {
+            'id': museumSnapshot.id, // Document id
+            'city': museumSnapshot['city'],
+            'country': museumSnapshot['country'],
+            'image': museumSnapshot['image'],
+            'name': museumSnapshot['name'],
+            'description': museumSnapshot['description'],
+          },
           'formattedDate': formattedDate // Include formatted date in the return data
         });
       }
@@ -175,92 +191,51 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                   children: [
                     SizedBox(height: 10),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                          margin: const EdgeInsets.only(top: 5, right: 0),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(181, 255, 255, 255), // Change background color as needed
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                spreadRadius: 1,
-                                blurRadius: 3,
-                                offset: Offset(0, 1), // changes position of shadow
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            data['formattedDate'],
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Image.network(data['image']),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-
-                        Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200], // Light grey background
-                            borderRadius: BorderRadius.circular(25), // Rounded corners
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
-                                spreadRadius: 1,
-                                blurRadius: 4,
-                                offset: Offset(0, 1), // changes position of shadow
-                              ),
-                            ],
-                        ),
-                          
-                        
-                          
-                              child : FutureBuilder<bool>(
-                                    future: checkIfLiked(data['id']),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                        return Icon(Icons.favorite_border, color: Colors.red);
-                                      }
-                                      bool isLiked = snapshot.data ?? false;
-                                      return IconButton(
-                                        icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                        color: Colors.red,
-                                        onPressed: () {
-                                          toggleFavorite(data['id']);
-                                        },
-                                      );
-                                    },
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                              margin: const EdgeInsets.only(top: 5, right: 0),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(181, 255, 255, 255), // Change background color as needed
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    spreadRadius: 1,
+                                    blurRadius: 3,
+                                    offset: Offset(0, 1), // changes position of shadow
                                   ),
+                                ],
+                              ),
+                              child: Text(
+                                data['formattedDate'],
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                        SizedBox(height: 10),
+                        Image.asset(data['image']),
+                        SizedBox(height: 10),
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
+                        
                         Container(
+                          
                           decoration: BoxDecoration(
                             color: Colors.grey[200], // Light grey background
                             borderRadius: BorderRadius.circular(10), // Rounded corners
                           ),
                           padding: const EdgeInsets.all(15),
                           child: Column(
+                        
                             children: [
+                              
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -345,7 +320,42 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                             ],
                           ),
                         ),
-                        
+
+                        Positioned(
+                      top: -15,
+                      right: 10,
+                      child : Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200], // Light grey background
+                          borderRadius: BorderRadius.circular(25), // Rounded corners
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: Offset(0, 1), // changes position of shadow
+                            ),
+                          ],
+                        ),
+                        child: FutureBuilder<bool>(
+
+                                    future: checkIfLiked(data['id']),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return Icon(Icons.favorite_border, color: Colors.red);
+                                      }
+                                      bool isLiked = snapshot.data ?? false;
+                                      return IconButton(
+                                        icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                                        color: Colors.red,
+                                        onPressed: () {
+                                          toggleFavorite(data['id']);
+                                        },
+                                      );
+                                    },
+                                  ),
+                         ),
+                        ),
                       ],
                     ),
                   ],
@@ -359,3 +369,22 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
     );
   }
 }
+
+
+                            // FutureBuilder<bool>(
+
+                            //         future: checkIfLiked(data['id']),
+                            //         builder: (context, snapshot) {
+                            //           if (snapshot.connectionState == ConnectionState.waiting) {
+                            //             return Icon(Icons.favorite_border, color: Colors.red);
+                            //           }
+                            //           bool isLiked = snapshot.data ?? false;
+                            //           return IconButton(
+                            //             icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                            //             color: Colors.red,
+                            //             onPressed: () {
+                            //               toggleFavorite(data['id']);
+                            //             },
+                            //           );
+                            //         },
+                            //       ),
