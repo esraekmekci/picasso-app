@@ -22,6 +22,7 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   var currentFilterState = List<String>.empty();
+  var currentSelectedCountry = '';
 
   final StreamController<List<dynamic>> _itemsController =
       StreamController.broadcast();
@@ -262,11 +263,13 @@ class _CategoryPageState extends State<CategoryPage> {
                         builder: (context) => FilterPage(
                           category: widget.category,
                           selectedFiltersProp: currentFilterState,
+                          selectedCountryProp: currentSelectedCountry,
                         ),
                       ),
                     );
                     currentFilterState = filterResult["selectedFilters"];
-                    final filteredItems = filterResult["filteredArtworkNames"];
+                    currentSelectedCountry = filterResult["selectedCountry"];
+                    final filteredItems = filterResult["filteredNames"];
                     _itemsFromFilterPage = filteredItems != null
                         ? _allItems
                             .where(
@@ -284,12 +287,6 @@ class _CategoryPageState extends State<CategoryPage> {
         ],
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
-    );
-  }
-
-  void _applyFilters(List<String> filteredItems) {
-    _itemsController.add(
-      _allItems.where((item) => filteredItems.contains(item['name'])).toList(),
     );
   }
 }

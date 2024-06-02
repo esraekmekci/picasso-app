@@ -4,9 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FilterPage extends StatefulWidget {
   final String category;
   final List<String> selectedFiltersProp;
+  final String? selectedCountryProp;
 
   const FilterPage(
-      {Key? key, required this.category, required this.selectedFiltersProp})
+      {Key? key, required this.category, required this.selectedFiltersProp, this.selectedCountryProp})
       : super(key: key);
 
   @override
@@ -21,6 +22,7 @@ class _FilterPageState extends State<FilterPage> {
   List<String> selectedFilters = [];
   Map<String, Set<String>> countryCityMap = {};
   String? selectedCountry;
+  Map<String, bool> showMoreMap = {};
 
   @override
   void initState() {
@@ -29,12 +31,13 @@ class _FilterPageState extends State<FilterPage> {
   }
 
   void fetchInitialData() {
-    if (widget.selectedFiltersProp != null &&
-        widget.selectedFiltersProp.isNotEmpty) {
+    if (widget.selectedFiltersProp.isNotEmpty) {
       selectedFilters = widget.selectedFiltersProp;
     }
 
-    if (widget.category == 'artworks' || widget.category == 'artists') {
+    selectedCountry = widget.selectedCountryProp;
+
+    if (widget.category == 'artworks' || widget.category == 'artists' || widget.category == 'movements') {
       fetchMovements();
       fetchPeriods();
     }
@@ -49,6 +52,7 @@ class _FilterPageState extends State<FilterPage> {
     setState(() {
       movements =
           snapshot.docs.map((doc) => doc.data()['name'] as String).toList();
+      showMoreMap['Movement'] = false;
     });
   }
 
@@ -68,6 +72,7 @@ class _FilterPageState extends State<FilterPage> {
     setState(() {
       countryCityMap = tempCountryCityMap;
       regions = countryCityMap.keys.toList();
+      showMoreMap['Country'] = false;
     });
   }
 
@@ -78,9 +83,9 @@ class _FilterPageState extends State<FilterPage> {
         '1600s',
         '1700s',
         '1800s',
-        '1900s',
-        '2000s'
+        '1900s'
       ]; // Example static periods
+      showMoreMap['Period'] = false;
     });
   }
 
@@ -92,26 +97,38 @@ class _FilterPageState extends State<FilterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.category == 'artists' || widget.category == 'artworks')
-              buildFilterTile('Period', periods, () {}),
+            if (widget.category == 'artists' || widget.category == 'artworks' || widget.category == 'movements')
+              buildFilterTile('Period', periods),
             if (widget.category == 'artworks')
-              buildFilterTile('Movement', movements, () {}),
+              buildFilterTile('Movement', movements),
             if (widget.category == 'museums') ...[
-              buildFilterTile('Country', regions, () {}),
+              buildFilterTile('Country', regions),
               if (selectedCountry != null) buildCityFilter(selectedCountry!),
             ],
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
-              child: ElevatedButton(
-                onPressed: applyFilters,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[300], // Button color
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 25, horizontal: 100),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-                child: const Text('Apply Filters'),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: applyFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[300], // Button color
+                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                    child: const Text('Apply Filters'),
+                  ),
+                  ElevatedButton(
+                    onPressed: resetFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[300], // Button color
+                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                    child: const Text('Reset Filters'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -120,8 +137,11 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
-  Widget buildFilterTile(
-      String title, List<String> options, VoidCallback toggleShowMore) {
+  Widget buildFilterTile(String title, List<String> options) {
+    bool showMore = showMoreMap[title] ?? false;
+    int initialDisplayCount = 4;
+    List<String> displayedOptions = showMore ? options : options.take(initialDisplayCount).toList();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Column(
@@ -133,21 +153,24 @@ class _FilterPageState extends State<FilterPage> {
           Wrap(
             spacing: 8.0,
             runSpacing: 4.0,
-            children: options
+            children: displayedOptions
                 .map((option) => FilterChip(
                       label: Text(option),
-                      selected: selectedFilters.contains(option),
+                      selected: (title == 'Country' && option == selectedCountry) ||
+                                (title != 'Country' && selectedFilters.contains(option)),
                       onSelected: (bool selected) {
                         setState(() {
                           if (selected) {
                             if (title == 'Country') {
                               selectedCountry = option;
+                              selectedFilters.clear(); // Clear city selection when a new country is selected
                             } else {
                               selectedFilters.add(option);
                             }
                           } else {
                             if (title == 'Country') {
                               selectedCountry = null;
+                              selectedFilters.clear(); // Clear city selection when country selection is cleared
                             } else {
                               selectedFilters.remove(option);
                             }
@@ -157,7 +180,15 @@ class _FilterPageState extends State<FilterPage> {
                     ))
                 .toList(),
           ),
-          TextButton(onPressed: toggleShowMore, child: const Text('Show More')),
+          if (options.length > initialDisplayCount)
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  showMoreMap[title] = !showMore;
+                });
+              },
+              child: Text(showMore ? 'Show Less' : 'Show More'),
+            ),
         ],
       ),
     );
@@ -165,7 +196,7 @@ class _FilterPageState extends State<FilterPage> {
 
   Widget buildCityFilter(String country) {
     List<String> cities = countryCityMap[country]?.toList() ?? [];
-    return buildFilterTile('City', cities, () {});
+    return buildFilterTile('City', cities);
   }
 
   void applyFilters() async {
@@ -177,68 +208,172 @@ class _FilterPageState extends State<FilterPage> {
       '1600s': [1600, 1699],
       '1700s': [1700, 1799],
       '1800s': [1800, 1899],
-      '1900s': [1900, 1999],
-      '2000s': [2000, 2099]
+      '1900s': [1900, 1999]
     };
 
-    // Filter by periods as year ranges, if any
-    List<String> selectedPeriods =
-        selectedFilters.where((f) => periods.contains(f)).toList();
-    if (selectedPeriods.isNotEmpty) {
-      for (var period in selectedPeriods) {
-        if (periodYearRanges.containsKey(period)) {
-          List<int> range = periodYearRanges[period]!;
-          queries.add(baseQuery.where('year',
-              isGreaterThanOrEqualTo: range[0], isLessThanOrEqualTo: range[1]));
+    if (widget.category == 'artworks') {
+      // Filter by periods as year ranges, if any
+      List<String> selectedPeriods =
+          selectedFilters.where((f) => periods.contains(f)).toList();
+      if (selectedPeriods.isNotEmpty) {
+        for (var period in selectedPeriods) {
+          if (periodYearRanges.containsKey(period)) {
+            List<int> range = periodYearRanges[period]!;
+            queries.add(baseQuery.where('year',
+                isGreaterThanOrEqualTo: range[0], isLessThanOrEqualTo: range[1]));
+          }
+        }
+      } else {
+        // If no period is selected, add the base query as a fallback
+        queries.add(baseQuery);
+      }
+
+      // Filter by selected movements
+      if (selectedFilters.any((f) => movements.contains(f))) {
+        var selectedMovements =
+            selectedFilters.where((f) => movements.contains(f)).toList();
+        var movementSnapshot = await FirebaseFirestore.instance
+            .collection('movements')
+            .where('name', whereIn: selectedMovements)
+            .get();
+        List<DocumentReference> movementReferences =
+            movementSnapshot.docs.map((doc) => doc.reference).toList();
+
+        if (movementReferences.isNotEmpty) {
+          for (var i = 0; i < queries.length; i++) {
+            queries[i] = queries[i]
+                .where('movement', arrayContainsAny: movementReferences);
+          }
         }
       }
-    } else {
-      // If no period is selected, add the base query as a fallback
-      queries.add(baseQuery);
-    }
 
-    // Filter by selected movements
-    if (selectedFilters.any((f) => movements.contains(f))) {
-      var selectedMovements =
-          selectedFilters.where((f) => movements.contains(f)).toList();
-      var movementSnapshot = await FirebaseFirestore.instance
-          .collection('movements')
-          .where('name', whereIn: selectedMovements)
-          .get();
-      List<DocumentReference> movementReferences =
-          movementSnapshot.docs.map((doc) => doc.reference).toList();
-
-      if (movementReferences.isNotEmpty) {
-        for (var i = 0; i < queries.length; i++) {
-          queries[i] = queries[i]
-              .where('movement', arrayContainsAny: movementReferences);
-        }
+      // Execute the queries and combine the results
+      List<String> filteredArtworkNames = [];
+      for (var query in queries) {
+        var snapshot = await query.get();
+        filteredArtworkNames.addAll(snapshot.docs
+            .map((doc) {
+              var data = doc.data();
+              return data is Map<String, dynamic>
+                  ? data['name'] as String?
+                  : null;
+            })
+            .where((name) => name != null)
+            .cast<String>()
+            .toList());
       }
+
+      // Remove duplicates, if any
+      filteredArtworkNames = filteredArtworkNames.toSet().toList();
+
+      // Navigate back and pass the filtered artwork names
+      Navigator.pop(context, {
+        'filteredNames': filteredArtworkNames,
+        'selectedFilters': selectedFilters,
+        'selectedCountry': selectedCountry
+      });
     }
 
-    // Execute the queries and combine the results
-    List<String> filteredArtworkNames = [];
-    for (var query in queries) {
-      var snapshot = await query.get();
-      filteredArtworkNames.addAll(snapshot.docs
+    if (widget.category == 'museums') {
+      // Filter by selected country and city
+      Query museumQuery = baseQuery;
+      if (selectedCountry != null) {
+        museumQuery = museumQuery.where('country', isEqualTo: selectedCountry);
+      }
+
+      if (selectedFilters.isNotEmpty) {
+        museumQuery = museumQuery.where('city', whereIn: selectedFilters);
+      }
+
+      var snapshot = await museumQuery.get();
+      List<String> filteredMuseumNames = snapshot.docs
           .map((doc) {
             var data = doc.data();
-            return data is Map<String, dynamic>
-                ? data['name'] as String?
-                : null;
+            return data is Map<String, dynamic> ? data['name'] as String? : null;
           })
           .where((name) => name != null)
           .cast<String>()
-          .toList());
+          .toList();
+
+      // Remove duplicates, if any
+      filteredMuseumNames = filteredMuseumNames.toSet().toList();
+
+      // Navigate back and pass the filtered museum names
+      Navigator.pop(context, {
+        'filteredNames': filteredMuseumNames,
+        'selectedFilters': selectedFilters,
+        'selectedCountry': selectedCountry
+      });
     }
 
-    // Remove duplicates, if any
-    filteredArtworkNames = filteredArtworkNames.toSet().toList();
+    if (widget.category == 'artists') {
+      Map<String, List<DateTime>> periodDateRanges = {
+        '1500s': [DateTime(1500, 1, 1), DateTime(1599, 12, 31)],
+        '1600s': [DateTime(1600, 1, 1), DateTime(1699, 12, 31)],
+        '1700s': [DateTime(1700, 1, 1), DateTime(1799, 12, 31)],
+        '1800s': [DateTime(1800, 1, 1), DateTime(1899, 12, 31)],
+        '1900s': [DateTime(1900, 1, 1), DateTime(1999, 12, 31)]
+      };
+      // Filter by selected periods
+      List<String> selectedPeriods =
+      selectedFilters.where((f) => periods.contains(f)).toList();
+      if (selectedPeriods.isNotEmpty) {
+        for (var period in selectedPeriods) {
+          if (periodDateRanges.containsKey(period)) {
+            List<DateTime> range = periodDateRanges[period]!;
+            queries.add(baseQuery.where('birthdate',
+                isGreaterThanOrEqualTo: range[0], isLessThanOrEqualTo: range[1]));
+          }
+        }
+      } else {
+        // If no period is selected, add the base query as a fallback
+        queries.add(baseQuery);
+      }
 
-    // Navigate back and pass the filtered artwork names
-    Navigator.pop(context, {
-      'filteredArtworkNames': filteredArtworkNames,
-      'selectedFilters': selectedFilters,
+      // Execute the queries and combine the results
+      List<String> filteredArtistNames = [];
+      for (var query in queries) {
+        var snapshot = await query.get();
+        filteredArtistNames.addAll(snapshot.docs
+            .map((doc) {
+              var data = doc.data();
+              return data is Map<String, dynamic> ? data['name'] as String? : null;
+            })
+            .where((name) => name != null)
+            .cast<String>()
+            .toList());
+      }
+
+      // Remove duplicates, if any
+      filteredArtistNames = filteredArtistNames.toSet().toList();
+
+      // If no artists match the selected periods, return an empty list
+      if (filteredArtistNames.isEmpty && selectedPeriods.isNotEmpty) {
+        Navigator.pop(context, {
+          'filteredNames': [],
+          'selectedFilters': selectedFilters,
+          'selectedCountry': selectedCountry
+        });
+        return;
+      }
+
+      // Navigate back and pass the filtered artist names
+      Navigator.pop(context, {
+        'filteredNames': filteredArtistNames,
+        'selectedFilters': selectedFilters,
+        'selectedCountry': selectedCountry
+      });
+    }
+
+    if (widget.category == 'movements') {
+      
+    }
+  }
+
+  void resetFilters() {
+    setState(() {
+      selectedFilters.clear();
+      selectedCountry = null;
     });
   }
 }
