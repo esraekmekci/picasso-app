@@ -171,12 +171,15 @@ class _ArtistPageState extends State<ArtistPage> with RouteAware {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        widget.artistData['name'] ?? 'Unknown Artist',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Expanded(
+                        child:Text(
+                          widget.artistData['name'] ?? 'Unknown Artist',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          softWrap: true,
+                        ), 
                       ),
                       FutureBuilder<bool>(
                         future: checkIfLiked(),
