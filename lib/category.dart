@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:picasso/appbar.dart';
@@ -19,11 +21,11 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  final StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
+  final StreamController<List<dynamic>> _itemsController =
+      StreamController.broadcast();
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allItems = []; // Store all items initially
   final Map<String, dynamic> _artistsMap = {}; // Store all artists
-  
 
   @override
   void initState() {
@@ -42,15 +44,19 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Future<void> _fetchItems() async {
-    final snapshot = await FirebaseFirestore.instance.collection(widget.category).get();
-    _allItems = snapshot.docs.map((doc) => {
-      ...doc.data(),
-      'id': doc.id,
-    }).toList();
+    final snapshot =
+        await FirebaseFirestore.instance.collection(widget.category).get();
+    _allItems = snapshot.docs
+        .map((doc) => {
+              ...doc.data(),
+              'id': doc.id,
+            })
+        .toList();
   }
 
   Future<void> _fetchArtists() async {
-    final snapshot = await FirebaseFirestore.instance.collection('artists').get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('artists').get();
     for (var doc in snapshot.docs) {
       _artistsMap[doc.id] = doc.data();
     }
@@ -62,12 +68,14 @@ class _CategoryPageState extends State<CategoryPage> {
       bool matchesName = name.toLowerCase().contains(query.toLowerCase());
 
       if (widget.category == 'artworks') {
-        final DocumentReference<Object?>? artistRef = item['artist']! as DocumentReference?;
+        final DocumentReference<Object?>? artistRef =
+            item['artist']! as DocumentReference?;
         if (artistRef != null) {
           final artistId = artistRef.id;
           if (_artistsMap.containsKey(artistId)) {
             final artistName = _artistsMap[artistId]['name'] as String;
-            return matchesName || artistName.toLowerCase().contains(query.toLowerCase());
+            return matchesName ||
+                artistName.toLowerCase().contains(query.toLowerCase());
           }
         }
       }
@@ -230,12 +238,22 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.shuffle),
+                  onPressed: () async {
+                    var allItems = _allItems;
+                    var randomItem =
+                        allItems[Random().nextInt(allItems.length)];
+                    navigateToDetailPage(randomItem);
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.filter_list),
                   onPressed: () async {
                     final filteredItems = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FilterPage(category: widget.category),
+                        builder: (context) =>
+                            FilterPage(category: widget.category),
                       ),
                     );
 
@@ -255,8 +273,8 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   void _applyFilters(List<String> filteredItems) {
-  _itemsController.add(
-    _allItems.where((item) => filteredItems.contains(item['name'])).toList(),
-  );
-}
+    _itemsController.add(
+      _allItems.where((item) => filteredItems.contains(item['name'])).toList(),
+    );
+  }
 }
