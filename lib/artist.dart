@@ -1,3 +1,4 @@
+import 'package:picasso/loading.dart';
 import 'package:picasso/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -224,7 +225,7 @@ class _ArtistPageState extends State<ArtistPage> with RouteAware {
                     future: artworkDataList,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
+                        return Center(child: LoadingGif());
                       }
                       if (snapshot.hasError) {
                         return Center(child: Text('Failed to load artworks: ${snapshot.error}'));

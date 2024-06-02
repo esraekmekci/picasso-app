@@ -43,15 +43,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 80), // Adjust height as necessary
-                  const Text(
-                    'Sign Up',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  Image.asset('assets/signup.png'),
                   const SizedBox(height: 80), // Adjust height as necessary
                   TextField(
                     controller: _nameController,

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart'; // Ensure you have the intl package installed
 import 'package:picasso/appbar.dart';
+import 'package:picasso/loading.dart';
 import 'artist.dart'; // Make sure this import path is correct
 import 'package:picasso/navbar.dart';
 import 'main.dart'; // Import the main file to access routeObserver
@@ -158,7 +159,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
         future: artworkData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: LoadingGif());
           }
           if (snapshot.hasError) {
             return Center(child: Text('Failed to load art details'));

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:picasso/appbar.dart';
+import 'package:picasso/loading.dart';
 import 'package:picasso/navbar.dart';
 import 'expandable_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -218,7 +219,7 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
                     future: artworkDataList,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
+                        return Center(child: LoadingGif());
                       }
                       if (snapshot.hasError) {
                         return Center(child: Text('Failed to load artworks: ${snapshot.error}'));

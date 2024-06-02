@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:picasso/appbar.dart';
+import 'package:picasso/loading.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -204,7 +205,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   SizedBox(height: 10),
                 ],
               ),
-              if (_isLoading) CircularProgressIndicator(),
+              if (_isLoading) LoadingGif(),
             ],
           ),
         ),

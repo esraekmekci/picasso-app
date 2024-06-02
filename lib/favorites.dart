@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:picasso/appbar.dart';
+import 'package:picasso/loading.dart';
 import 'package:picasso/navbar.dart';
 import 'login.dart';
 import 'artwork.dart';
@@ -54,7 +55,7 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
+            return LoadingGif();
           }
           if (!snapshot.hasData) {
             return const Center(child: Text('Please log in to see your favorites.'));
@@ -149,7 +150,7 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
           return Text("No user data available");
         }
       } else if (snapshot.connectionState == ConnectionState.waiting) {
-        return CircularProgressIndicator();
+        return LoadingGif();
       } else {
         return Text("Unable to load user data");
       }
@@ -376,7 +377,7 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                     } else if (snapshot.hasError) {
                       return Center(child: Text("Error: ${snapshot.error}"));
                     } else {
-                      return Center(child: CircularProgressIndicator());
+                      return Center(child: LoadingGif());
                     }
                   },
                 );
@@ -384,7 +385,7 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
           return Center(child: Text("No favorite $collectionName found."));
         }
       } else if (snapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: CircularProgressIndicator());
+        return Center(child: LoadingGif());
       } else {
         return Center(child: Text("Unable to load favorite $collectionName."));
       }

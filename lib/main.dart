@@ -32,7 +32,7 @@ class PicassoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Picasßo',
+      title: 'Picaßo',
       theme: ThemeData(
         primarySwatch: Colors.amber,
         fontFamily: GoogleFonts.quicksand().fontFamily,
