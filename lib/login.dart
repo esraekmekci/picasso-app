@@ -78,14 +78,10 @@ class _LoginPageState extends State<LoginPage> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ArtDetailsPage()),
-                          (Route<dynamic> route) => false,
-                        );
-
-
-                          
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ResetPasswordPage()),
+                          );
                         },
                         child: const Text(
                           'Forgot your password?',
@@ -107,7 +103,11 @@ class _LoginPageState extends State<LoginPage> {
                             email: _emailController.text.trim(),
                             password: _passwordController.text.trim(),
                           );
-                          Navigator.pushReplacementNamed(context, '/daily');
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => ArtDetailsPage()),
+                            (Route<dynamic> route) => false,
+                          );
                         } on FirebaseAuthException catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('No user found for that email')),
