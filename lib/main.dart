@@ -45,9 +45,8 @@ class PicassoApp extends StatelessWidget {
         '/daily': (context) => const ArtDetailsPage(),
         '/discover': (context) => const DiscoverPage(),
         '/favorites': (context) => const FavoritesPage(),
-        '/admin': (context) =>  AddArtworkPage(),
+        '/admin': (context) => AddArtworkPage(),
         '/settings': (context) => SettingsPage(),
-
       },
       onGenerateRoute: (RouteSettings settings) {
         if (settings.name == '/artist') {
@@ -88,7 +87,10 @@ class PicassoApp extends StatelessWidget {
           final args = settings.arguments as String;
           return MaterialPageRoute(
             builder: (context) {
-              return FilterPage(category: args);
+              return FilterPage(
+                category: args,
+                selectedFiltersProp: [],
+              );
             },
           );
         }
@@ -97,5 +99,3 @@ class PicassoApp extends StatelessWidget {
     );
   }
 }
-
-        

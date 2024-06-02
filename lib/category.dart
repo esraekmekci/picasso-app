@@ -21,6 +21,8 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
+  var currentFilterState = List<String>.empty();
+
   final StreamController<List<dynamic>> _itemsController =
       StreamController.broadcast();
   final TextEditingController _searchController = TextEditingController();
@@ -249,14 +251,17 @@ class _CategoryPageState extends State<CategoryPage> {
                 IconButton(
                   icon: const Icon(Icons.filter_list),
                   onPressed: () async {
-                    final filteredItems = await Navigator.push(
+                    final filterResult = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            FilterPage(category: widget.category),
+                        builder: (context) => FilterPage(
+                          category: widget.category,
+                          selectedFiltersProp: currentFilterState,
+                        ),
                       ),
                     );
-
+                    currentFilterState = filterResult["selectedFilters"];
+                    final filteredItems = filterResult["filteredArtworkNames"];
                     if (filteredItems != null) {
                       _applyFilters(filteredItems);
                     }
