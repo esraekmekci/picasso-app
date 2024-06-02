@@ -227,79 +227,86 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                           SizedBox(height: 10),
                           Row(
                             children: [
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ArtistPage(
-                                      artistData: {
-                                        'id': data['artist']['id'],
-                                        'image': data['artist']['image'],
-                                        'name': data['artist']['name'],
-                                        'deathdate': data['artist']
-                                            ['deathdate'],
-                                        'birthdate': data['artist']
-                                            ['birthdate'],
-                                        'description': data['artist']
-                                            ['description']
-                                      },
+                              ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Color.fromARGB(255, 27, 90, 29), // Background color
+                                          foregroundColor: Colors.white, // Text color
+                                          elevation: 2,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        ),
+                                        onPressed: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ArtistPage(
+                                              artistData: {
+                                                'id': data['artist']['id'],
+                                                'image': data['artist']['image'],
+                                                'name': data['artist']['name'],
+                                                'deathdate': data['artist']['deathdate'],
+                                                'birthdate': data['artist']['birthdate'],
+                                                'description': data['artist']['description']
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(data['artist']['name']),
                                     ),
-                                  ),
-                                ),
-                                child: Chip(
-                                  label: Text(data['artist']['name']),
-                                  backgroundColor: Colors.green[100],
-                                ),
-                              ),
+
                               SizedBox(width: 10),
                               Text(
                                 data['year']?.toString() ?? 'Unknown Year',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey,
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Text(
                             data['description'],
-                            style: TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 16),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Row(
-                            children: [
-                              Wrap(
-                                spacing: 8.0,
-                                children:
-                                    data['movements'].map<Widget>((movement) {
-                                  return GestureDetector(
-                                    onTap: () => Navigator.pushNamed(
-                                        context, '/movement',
-                                        arguments: movement),
-                                    child: Chip(
-                                      label: Text(movement['name']),
-                                      backgroundColor: Colors.green[100],
-                                    ),
-                                  );
-                                }).toList(),
+                          children: [
+                            Wrap(
+                              spacing: 8.0,
+                              children: data['movements'].map<Widget>((movement) {
+                                return ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                    foregroundColor: const Color.fromARGB(255, 255, 255, 255), // Text color
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                  ),
+                                  onPressed: () => Navigator.pushNamed(context, '/movement', arguments: movement),
+                                  child: Text(movement['name']),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                foregroundColor: const Color.fromARGB(255, 255, 255, 255), // Text color
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               ),
-                            ],
-                          ),
-                          SizedBox(height: 20),
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.pushNamed(
-                                    context, '/museum',
-                                    arguments: data['museum']),
-                                child: Chip(
-                                  label: Text(data['museum']['name']),
-                                  backgroundColor: Colors.green[100],
-                                ),
-                              ),
-                            ],
-                          ),
+                              onPressed: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                              child: Text(data['museum']['name']),
+                            ),
+                          ],
+                        ),
+
                         ],
                       ),
                     ),

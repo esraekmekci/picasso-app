@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,8 +8,6 @@ import 'package:picasso/navbar.dart';
 import 'artist.dart';
 import 'main.dart'; // Make sure this import path is correct
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/services.dart'; // Import this package for SystemNavigator.pop
-import 'loading.dart';
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
@@ -23,7 +20,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
   late PageController _pageController;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   bool isLiked = false;
-  int _currentIndex = 1;
+  final int _currentIndex = 1;
 
   @override
   void initState() {
@@ -178,7 +175,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                 padding: const EdgeInsets.all(15),
                 child: ListView(
                   children: [
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -193,13 +190,13 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                 color: Colors.grey.withOpacity(0.1),
                                 spreadRadius: 1,
                                 blurRadius: 3,
-                                offset: Offset(0, 1), // changes position of shadow
+                                offset: const Offset(0, 1), // changes position of shadow
                               ),
                             ],
                           ),
                           child: Text(
                             data['formattedDate'],
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.black,
                               fontSize: 16,
                             ),
@@ -207,15 +204,15 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Image.asset(data['image']),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[200], // Light grey background
+                            color: const Color.fromARGB(255, 240, 240, 240), // Light grey background
                             borderRadius: BorderRadius.circular(10), // Rounded corners
                           ),
                           padding: const EdgeInsets.all(15),
@@ -237,72 +234,88 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                               Row(
                                 children: [
-                                  GestureDetector(
-                                    onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ArtistPage(
-                                          artistData: {
-                                            'id': data['artist']['id'],
-                                            'image': data['artist']['image'],
-                                            'name': data['artist']['name'],
-                                            'deathdate': data['artist']['deathdate'],
-                                            'birthdate': data['artist']['birthdate'],
-                                            'description': data['artist']['description']
-                                          },
+                                  ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                          foregroundColor: Colors.white, // Text color
+                                          elevation: 2,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        ),
+                                        onPressed: () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ArtistPage(
+                                              artistData: {
+                                                'id': data['artist']['id'],
+                                                'image': data['artist']['image'],
+                                                'name': data['artist']['name'],
+                                                'deathdate': data['artist']['deathdate'],
+                                                'birthdate': data['artist']['birthdate'],
+                                                'description': data['artist']['description']
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(data['artist']['name']),
+                                    ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        data['year']?.toString() ?? 'Unknown Year',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey,
                                         ),
                                       ),
-                                    ),
-                                    child: Chip(
-                                      label: Text(data['artist']['name']),
-                                      backgroundColor: Colors.green[100],
-                                    ),
+                                    ],
                                   ),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    data['year']?.toString() ?? 'Unknown Year',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 20),
+
+
+                              const SizedBox(height: 20),
                               Text(
                                 data['description'],
-                                style: TextStyle(fontSize: 16),
+                                style: const TextStyle(fontSize: 16),
                               ),
-                              SizedBox(height: 20),
+                              const SizedBox(height: 20),
                               Row(
                                 children: [
                                   Wrap(
                                     spacing: 8.0,
                                     children: List<Widget>.generate(data['movements'].length, (int index) {
-                                      return GestureDetector(
-                                        onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
-                                        child: Chip(
-                                          label: Text(data['movements'][index]['name']),
-                                          backgroundColor: Colors.green[100],
+                                      return ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                          foregroundColor: Colors.white, // Text color
+                                          elevation: 2,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                         ),
+                                        onPressed: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
+                                        child: Text(data['movements'][index]['name']),
                                       );
                                     }).toList(),
                                   ),
+
                                 ],
                               ),
-                              SizedBox(height: 20),
+                              const SizedBox(height: 20),
                               Row(
                                 children: [
-                                  GestureDetector(
-                                    onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
-                                    child: Chip(
-                                      label: Text(data['museum']['name']),
-                                      backgroundColor: Colors.green[100],
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                      foregroundColor: Colors.white, // Text color
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     ),
-                                  ),
+                                    onPressed: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                                    child: Text(data['museum']['name']),
+                                ),
+
                                 ],
                               ),
                             ],
@@ -317,10 +330,10 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                               borderRadius: BorderRadius.circular(25), // Rounded corners
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
+                                  color: const Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
                                   spreadRadius: 1,
                                   blurRadius: 4,
-                                  offset: Offset(0, 1), // changes position of shadow
+                                  offset: const Offset(0, 1), // changes position of shadow
                                 ),
                               ],
                             ),
@@ -328,7 +341,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                               future: checkIfLiked(data['id']),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return Icon(Icons.favorite_border, color: Colors.red);
+                                  return const Icon(Icons.favorite_border, color: Colors.red);
                                 }
                                 bool isLiked = snapshot.data ?? false;
                                 return IconButton(
