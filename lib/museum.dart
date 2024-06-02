@@ -171,14 +171,16 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        widget.museumData['name'],
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          widget.museumData['name'],
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          softWrap: true,
                         ),
                       ),
-                      
                       FutureBuilder<bool>(
                                 future: checkIfLiked(),
                                 

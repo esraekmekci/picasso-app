@@ -117,23 +117,27 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                   child: CircleAvatar(
                     radius: 60,
                     backgroundColor: Colors.transparent,
-                    backgroundImage: AssetImage(userData['icon'] ?? "assets/user.png"),
+                    backgroundImage: AssetImage(userData['icon'] ?? "assets/user1.png"),
                   ),
                 ),
                 SizedBox(height: 10), // Dikey boşluk
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                  userData['username'] ?? 'Unknown',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),IconButton(
-                  icon: Icon(Icons.settings),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/settings'); // Ayarlar sayfasına yönlendirme
-                  },
-                ),
+                    Flexible(
+                      child: Text(
+                        userData['username'] ?? 'Unknown',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.settings),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/settings'); // Ayarlar sayfasına yönlendirme
+                      },
+                    ),
                   ],
                 ),
                 SizedBox(height: 10), // Dikey boşluk

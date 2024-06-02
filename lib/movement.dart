@@ -170,11 +170,14 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between elements
                     children: [
-                      Text(
-                        widget.movementData['name'],
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          widget.movementData['name'],
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          softWrap: true,
                         ),
                       ),
                       FutureBuilder<bool>(
