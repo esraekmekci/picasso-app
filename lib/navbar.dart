@@ -18,21 +18,19 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   }
 
   void _onItemTapped(int index) {
-    if (index != _currentIndex) {
-      setState(() {
-        _currentIndex = index;
-      });
-      switch (index) {
-        case 0:
-          Navigator.pushNamed(context, '/discover');
-          break;
-        case 1:
-          Navigator.pushNamed(context, '/daily');
-          break;
-        case 2:
-          Navigator.pushNamed(context, '/favorites');
-          break;
-      }
+    setState(() {
+      _currentIndex = index;
+    });
+    switch (index) {
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(context, '/discover', (route) => false);
+        break;
+      case 1:
+        Navigator.pushNamedAndRemoveUntil(context, '/daily', (route) => false);
+        break;
+      case 2:
+        Navigator.pushNamedAndRemoveUntil(context, '/favorites', (route) => false);
+        break;
     }
   }
 
