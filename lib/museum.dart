@@ -239,9 +239,10 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
 
                       return GridView.builder(
                         shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(), // Prevents scrolling within the GridView
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
+                          childAspectRatio: 0.8,  // Adjusted for better display
                         ),
                         itemCount: artworks.length,
                         itemBuilder: (context, index) {
@@ -256,22 +257,21 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
                               );
                             },
                             child: Container(
-                              width: 140,
                               margin: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 image: DecorationImage(
                                   image: AssetImage(artwork['image']),
-                                  fit: BoxFit.contain,
+                                  fit: BoxFit.cover,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              alignment: Alignment.center,
                             ),
                           );
                         },
                       );
                     },
                   ),
+
                 ],
               ),
             ),

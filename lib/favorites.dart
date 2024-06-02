@@ -99,46 +99,60 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
   }
 
   Widget _buildProfileHeader(User user) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          var userData = snapshot.data?.data() as Map<String, dynamic>?; // Safe access using '?.'
-          if (userData != null) { // Check if userData is not null before using it
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () => _showIconSelectionDialog(context, user.uid),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.transparent,
-                      backgroundImage: AssetImage(userData['icon'] ?? "assets/user.png"),
-                    ),
+  return FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.done) {
+        var userData = snapshot.data?.data() as Map<String, dynamic>?; // Safe access using '?.'
+        if (userData != null) { // Check if userData is not null before using it
+        
+          return Center( // Merkeze almak için Center widget'ını kullan
+          
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => _showIconSelectionDialog(context, user.uid),
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: AssetImage(userData['icon'] ?? "assets/user.png"),
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    userData['username'] ?? 'Unknown',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          } else {
-            return Text("No user data available");
-          }
-        } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+                ),
+                SizedBox(height: 10), // Dikey boşluk
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                  userData['username'] ?? 'Unknown',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),IconButton(
+                  icon: Icon(Icons.settings),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/settings'); // Ayarlar sayfasına yönlendirme
+                  },
+                ),
+                  ],
+                ),
+                SizedBox(height: 10), // Dikey boşluk
+                
+              ],
+            ),
+          );
         } else {
-          return Text("Unable to load user data");
+          return Text("No user data available");
         }
-      },
-    );
-  }
+      } else if (snapshot.connectionState == ConnectionState.waiting) {
+        return CircularProgressIndicator();
+      } else {
+        return Text("Unable to load user data");
+      }
+    },
+  );
+}
+
 
   void _showIconSelectionDialog(BuildContext context, String userId) {
     showDialog(

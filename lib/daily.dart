@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +8,7 @@ import 'package:picasso/navbar.dart';
 import 'artist.dart';
 import 'main.dart'; // Make sure this import path is correct
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart'; // Import this package for SystemNavigator.pop
 
 class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
@@ -36,7 +36,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
   }
 
-  // @override
+    // @override
   // void dispose() {
   //   routeObserver.unsubscribe(this);
   //   super.dispose();
@@ -162,229 +162,213 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: artworkDataList,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Failed to load art details'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No Art for Today'));
-          }
+    return WillPopScope(
+      onWillPop: () async {
+        SystemNavigator.pop(); // Exit the app
+        return false; // Prevent the default behavior
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(),
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: artworkDataList,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Failed to load art details'));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No Art for Today'));
+            }
 
-          List<Map<String, dynamic>> artworks = snapshot.data!;
+            List<Map<String, dynamic>> artworks = snapshot.data!;
 
-          return PageView.builder(
-            controller: _pageController,
-            itemCount: artworks.length,
-            itemBuilder: (context, index) {
-              Map<String, dynamic> data = artworks[index];
+            return PageView.builder(
+              controller: _pageController,
+              itemCount: artworks.length,
+              itemBuilder: (context, index) {
+                Map<String, dynamic> data = artworks[index];
 
-              return Padding(
-                padding: const EdgeInsets.all(15),
-                child: ListView(
-                  children: [
-                    SizedBox(height: 10),
-                    Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                              margin: const EdgeInsets.only(top: 5, right: 0),
+                return Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: ListView(
+                    children: [
+                      SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                            margin: const EdgeInsets.only(top: 5, right: 0),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(181, 255, 255, 255), // Change background color as needed
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1), // changes position of shadow
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              data['formattedDate'],
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      Image.asset(data['image']),
+                      SizedBox(height: 10),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200], // Light grey background
+                              borderRadius: BorderRadius.circular(10), // Rounded corners
+                            ),
+                            padding: const EdgeInsets.all(15),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded( // Ensure text does not overflow and wraps to the next line
+                                      child: Text(
+                                        data['name'],
+                                        style: GoogleFonts.cormorantUpright(
+                                          fontSize: 35,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                        softWrap: true, // Allow text to wrap
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ArtistPage(
+                                            artistData: {
+                                              'id': data['artist']['id'],
+                                              'image': data['artist']['image'],
+                                              'name': data['artist']['name'],
+                                              'deathdate': data['artist']['deathdate'],
+                                              'birthdate': data['artist']['birthdate'],
+                                              'description': data['artist']['description']
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                      child: Chip(
+                                        label: Text(data['artist']['name']),
+                                        backgroundColor: Colors.green[100],
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      data['year']?.toString() ?? 'Unknown Year',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 20),
+                                Text(
+                                  data['description'],
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    Wrap(
+                                      spacing: 8.0,
+                                      children: List<Widget>.generate(data['movements'].length, (int index) {
+                                        return GestureDetector(
+                                          onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
+                                          child: Chip(
+                                            label: Text(data['movements'][index]['name']),
+                                            backgroundColor: Colors.green[100],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                                      child: Chip(
+                                        label: Text(data['museum']['name']),
+                                        backgroundColor: Colors.green[100],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            top: -15,
+                            right: 10,
+                            child: Container(
                               decoration: BoxDecoration(
-                                color: const Color.fromARGB(181, 255, 255, 255), // Change background color as needed
-                                borderRadius: BorderRadius.circular(20),
+                                color: Colors.grey[200], // Light grey background
+                                borderRadius: BorderRadius.circular(25), // Rounded corners
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
                                     spreadRadius: 1,
-                                    blurRadius: 3,
+                                    blurRadius: 4,
                                     offset: Offset(0, 1), // changes position of shadow
                                   ),
                                 ],
                               ),
-                              child: Text(
-                                data['formattedDate'],
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        Image.asset(data['image']),
-                        SizedBox(height: 10),
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        
-                        Container(
-                          
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200], // Light grey background
-                            borderRadius: BorderRadius.circular(10), // Rounded corners
-                          ),
-                          padding: const EdgeInsets.all(15),
-                          child: Column(
-                        
-                            children: [
-                              
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    data['name'],
-                                    style: GoogleFonts.cormorantUpright(
-                                      fontSize: 35,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ArtistPage(
-                                          artistData: {
-                                            'id': data['artist']['id'],
-                                            'image': data['artist']['image'],
-                                            'name': data['artist']['name'],
-                                            'deathdate': data['artist']['deathdate'],
-                                            'birthdate': data['artist']['birthdate'],
-                                            'description': data['artist']['description']
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    child: Chip(
-                                      label: Text(data['artist']['name']),
-                                      backgroundColor: Colors.green[100],
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    data['year']?.toString() ?? 'Unknown Year',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 20),
-                              Text(
-                                data['description'],
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              SizedBox(height: 20),
-                              Row(
-                                children: [
-                                  Wrap(
-                                    spacing: 8.0,
-                                    children: List<Widget>.generate(data['movements'].length, (int index) {
-                                      return GestureDetector(
-                                        onTap: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
-                                        child: Chip(
-                                          label: Text(data['movements'][index]['name']),
-                                          backgroundColor: Colors.green[100],
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 20),
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
-                                    child: Chip(
-                                      label: Text(data['museum']['name']),
-                                      backgroundColor: Colors.green[100],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Positioned(
-                      top: -15,
-                      right: 10,
-                      child : Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200], // Light grey background
-                          borderRadius: BorderRadius.circular(25), // Rounded corners
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 4,
-                              offset: Offset(0, 1), // changes position of shadow
-                            ),
-                          ],
-                        ),
-                        child: FutureBuilder<bool>(
-
-                                    future: checkIfLiked(data['id']),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                        return Icon(Icons.favorite_border, color: Colors.red);
-                                      }
-                                      bool isLiked = snapshot.data ?? false;
-                                      return IconButton(
-                                        icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                        color: Colors.red,
-                                        onPressed: () {
-                                          toggleFavorite(data['id']);
-                                        },
-                                      );
+                              child: FutureBuilder<bool>(
+                                future: checkIfLiked(data['id']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Icon(Icons.favorite_border, color: Colors.red);
+                                  }
+                                  bool isLiked = snapshot.data ?? false;
+                                  return IconButton(
+                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                                    color: Colors.red,
+                                    onPressed: () {
+                                      toggleFavorite(data['id']);
                                     },
-                                  ),
-                         ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
       ),
-      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
     );
   }
 }
-
-
-                            // FutureBuilder<bool>(
-
-                            //         future: checkIfLiked(data['id']),
-                            //         builder: (context, snapshot) {
-                            //           if (snapshot.connectionState == ConnectionState.waiting) {
-                            //             return Icon(Icons.favorite_border, color: Colors.red);
-                            //           }
-                            //           bool isLiked = snapshot.data ?? false;
-                            //           return IconButton(
-                            //             icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                            //             color: Colors.red,
-                            //             onPressed: () {
-                            //               toggleFavorite(data['id']);
-                            //             },
-                            //           );
-                            //         },
-                            //       ),

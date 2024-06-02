@@ -184,14 +184,17 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                data['name'],
-                                style: GoogleFonts.cormorantUpright(
-                                      fontSize: 35,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
+                              Expanded( // Ensure text does not overflow and wraps to the next line
+                                    child: Text(
+                                      data['name'],
+                                      style: GoogleFonts.cormorantUpright(
+                                        fontSize: 35,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                      softWrap: true, // Allow text to wrap
                                     ),
-                              ),
+                                  ),
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.grey[200], // Light grey background
