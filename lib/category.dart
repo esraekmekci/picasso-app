@@ -27,6 +27,8 @@ class _CategoryPageState extends State<CategoryPage> {
       StreamController.broadcast();
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allItems = []; // Store all items initially
+  List<dynamic> _itemsFromFilterPage = [];
+
   final Map<String, dynamic> _artistsMap = {}; // Store all artists
 
   @override
@@ -65,7 +67,10 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   void _filterItems(String query) {
-    final filteredItems = _allItems.where((item) {
+    var _items =
+        _itemsFromFilterPage.isEmpty ? _allItems : _itemsFromFilterPage;
+
+    final filteredItems = _items.where((item) {
       final name = item['name'] as String;
       bool matchesName = name.toLowerCase().contains(query.toLowerCase());
 
@@ -262,9 +267,14 @@ class _CategoryPageState extends State<CategoryPage> {
                     );
                     currentFilterState = filterResult["selectedFilters"];
                     final filteredItems = filterResult["filteredArtworkNames"];
-                    if (filteredItems != null) {
-                      _applyFilters(filteredItems);
-                    }
+                    _itemsFromFilterPage = filteredItems != null
+                        ? _allItems
+                            .where(
+                                (item) => filteredItems.contains(item['name']))
+                            .toList()
+                        : _allItems;
+
+                    _onSearchChanged();
                   },
                 ),
               ],
