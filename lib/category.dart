@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:picasso/appbar.dart';
@@ -19,11 +21,15 @@ class CategoryPage extends StatefulWidget {
 }
 
 class _CategoryPageState extends State<CategoryPage> {
-  final StreamController<List<dynamic>> _itemsController = StreamController.broadcast();
+  var currentFilterState = List<String>.empty();
+
+  final StreamController<List<dynamic>> _itemsController =
+      StreamController.broadcast();
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allItems = []; // Store all items initially
+  List<dynamic> _itemsFromFilterPage = [];
+
   final Map<String, dynamic> _artistsMap = {}; // Store all artists
-  
 
   @override
   void initState() {
@@ -42,32 +48,41 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Future<void> _fetchItems() async {
-    final snapshot = await FirebaseFirestore.instance.collection(widget.category).get();
-    _allItems = snapshot.docs.map((doc) => {
-      ...doc.data(),
-      'id': doc.id,
-    }).toList();
+    final snapshot =
+        await FirebaseFirestore.instance.collection(widget.category).get();
+    _allItems = snapshot.docs
+        .map((doc) => {
+              ...doc.data(),
+              'id': doc.id,
+            })
+        .toList();
   }
 
   Future<void> _fetchArtists() async {
-    final snapshot = await FirebaseFirestore.instance.collection('artists').get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('artists').get();
     for (var doc in snapshot.docs) {
       _artistsMap[doc.id] = doc.data();
     }
   }
 
   void _filterItems(String query) {
-    final filteredItems = _allItems.where((item) {
+    var _items =
+        _itemsFromFilterPage.isEmpty ? _allItems : _itemsFromFilterPage;
+
+    final filteredItems = _items.where((item) {
       final name = item['name'] as String;
       bool matchesName = name.toLowerCase().contains(query.toLowerCase());
 
       if (widget.category == 'artworks') {
-        final DocumentReference<Object?>? artistRef = item['artist']! as DocumentReference?;
+        final DocumentReference<Object?>? artistRef =
+            item['artist']! as DocumentReference?;
         if (artistRef != null) {
           final artistId = artistRef.id;
           if (_artistsMap.containsKey(artistId)) {
             final artistName = _artistsMap[artistId]['name'] as String;
-            return matchesName || artistName.toLowerCase().contains(query.toLowerCase());
+            return matchesName ||
+                artistName.toLowerCase().contains(query.toLowerCase());
           }
         }
       }
@@ -230,18 +245,36 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.shuffle),
+                  onPressed: () async {
+                    var allItems = _allItems;
+                    var randomItem =
+                        allItems[Random().nextInt(allItems.length)];
+                    navigateToDetailPage(randomItem);
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.filter_list),
                   onPressed: () async {
-                    final filteredItems = await Navigator.push(
+                    final filterResult = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FilterPage(category: widget.category),
+                        builder: (context) => FilterPage(
+                          category: widget.category,
+                          selectedFiltersProp: currentFilterState,
+                        ),
                       ),
                     );
+                    currentFilterState = filterResult["selectedFilters"];
+                    final filteredItems = filterResult["filteredArtworkNames"];
+                    _itemsFromFilterPage = filteredItems != null
+                        ? _allItems
+                            .where(
+                                (item) => filteredItems.contains(item['name']))
+                            .toList()
+                        : _allItems;
 
-                    if (filteredItems != null) {
-                      _applyFilters(filteredItems);
-                    }
+                    _onSearchChanged();
                   },
                 ),
               ],
@@ -255,8 +288,8 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   void _applyFilters(List<String> filteredItems) {
-  _itemsController.add(
-    _allItems.where((item) => filteredItems.contains(item['name'])).toList(),
-  );
-}
+    _itemsController.add(
+      _allItems.where((item) => filteredItems.contains(item['name'])).toList(),
+    );
+  }
 }

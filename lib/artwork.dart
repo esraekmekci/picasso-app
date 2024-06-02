@@ -60,13 +60,18 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
       throw Exception('Artwork not found');
     }
 
-    final Map<String, dynamic> artworkInfo = artworkSnapshot.data() as Map<String, dynamic>;
-    final DocumentReference artistRef = artworkInfo['artist'] as DocumentReference;
-    final List<DocumentReference> movementRefs = (artworkInfo['movement'] as List).cast<DocumentReference>();
-    final DocumentReference museumRef = artworkInfo['museum'] as DocumentReference;
+    final Map<String, dynamic> artworkInfo =
+        artworkSnapshot.data() as Map<String, dynamic>;
+    final DocumentReference artistRef =
+        artworkInfo['artist'] as DocumentReference;
+    final List<DocumentReference> movementRefs =
+        (artworkInfo['movement'] as List).cast<DocumentReference>();
+    final DocumentReference museumRef =
+        artworkInfo['museum'] as DocumentReference;
 
     final DocumentSnapshot artistSnapshot = await artistRef.get();
-    final List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
+    final List<DocumentSnapshot> movementSnapshots =
+        await Future.wait(movementRefs.map((ref) => ref.get()));
     final DocumentSnapshot museumSnapshot = await museumRef.get();
 
     return {
@@ -91,15 +96,14 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
           'image': snapshot['image'],
         };
       }).toList(),
-
       'museum': {
-            'id': museumSnapshot.id, // Document id
-            'city': museumSnapshot['city'],
-            'country': museumSnapshot['country'],
-            'image': museumSnapshot['image'],
-            'name': museumSnapshot['name'],
-            'description': museumSnapshot['description'],
-          },   
+        'id': museumSnapshot.id, // Document id
+        'city': museumSnapshot['city'],
+        'country': museumSnapshot['country'],
+        'image': museumSnapshot['image'],
+        'name': museumSnapshot['name'],
+        'description': museumSnapshot['description'],
+      },
     };
   }
 
@@ -107,7 +111,8 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
     if (doc.exists) {
@@ -133,7 +138,8 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
     if (doc.exists) {
@@ -176,7 +182,8 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[200], // Light grey background
-                        borderRadius: BorderRadius.circular(10), // Rounded corners
+                        borderRadius:
+                            BorderRadius.circular(10), // Rounded corners
                       ),
                       padding: const EdgeInsets.all(15),
                       child: Column(
@@ -184,27 +191,32 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded( // Ensure text does not overflow and wraps to the next line
-                                    child: Text(
-                                      data['name'],
-                                      style: GoogleFonts.cormorantUpright(
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                      softWrap: true, // Allow text to wrap
-                                    ),
+                              Expanded(
+                                // Ensure text does not overflow and wraps to the next line
+                                child: Text(
+                                  data['name'],
+                                  style: GoogleFonts.cormorantUpright(
+                                    fontSize: 35,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
                                   ),
+                                  softWrap: true, // Allow text to wrap
+                                ),
+                              ),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200], // Light grey background
-                                  borderRadius: BorderRadius.circular(25), // Rounded corners
+                                  color:
+                                      Colors.grey[200], // Light grey background
+                                  borderRadius: BorderRadius.circular(
+                                      25), // Rounded corners
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
+                                      color: Color.fromARGB(255, 245, 228, 78)
+                                          .withOpacity(0.1),
                                       spreadRadius: 1,
                                       blurRadius: 4,
-                                      offset: Offset(0, 1), // changes position of shadow
+                                      offset: Offset(
+                                          0, 1), // changes position of shadow
                                     ),
                                   ],
                                 ),
@@ -223,9 +235,12 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                                         'id': data['artist']['id'],
                                         'image': data['artist']['image'],
                                         'name': data['artist']['name'],
-                                        'deathdate': data['artist']['deathdate'],
-                                        'birthdate': data['artist']['birthdate'],
-                                        'description': data['artist']['description']
+                                        'deathdate': data['artist']
+                                            ['deathdate'],
+                                        'birthdate': data['artist']
+                                            ['birthdate'],
+                                        'description': data['artist']
+                                            ['description']
                                       },
                                     ),
                                   ),
@@ -255,9 +270,12 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                             children: [
                               Wrap(
                                 spacing: 8.0,
-                                children: data['movements'].map<Widget>((movement) {
+                                children:
+                                    data['movements'].map<Widget>((movement) {
                                   return GestureDetector(
-                                    onTap: () => Navigator.pushNamed(context, '/movement', arguments: movement),
+                                    onTap: () => Navigator.pushNamed(
+                                        context, '/movement',
+                                        arguments: movement),
                                     child: Chip(
                                       label: Text(movement['name']),
                                       backgroundColor: Colors.green[100],
@@ -271,7 +289,9 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                           Row(
                             children: [
                               GestureDetector(
-                                onTap: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                                onTap: () => Navigator.pushNamed(
+                                    context, '/museum',
+                                    arguments: data['museum']),
                                 child: Chip(
                                   label: Text(data['museum']['name']),
                                   backgroundColor: Colors.green[100],
@@ -288,18 +308,22 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.grey[200], // Light grey background
-                          borderRadius: BorderRadius.circular(25), // Rounded corners
+                          borderRadius:
+                              BorderRadius.circular(25), // Rounded corners
                           boxShadow: [
                             BoxShadow(
-                              color: Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
+                              color: Color.fromARGB(255, 245, 228, 78)
+                                  .withOpacity(0.1),
                               spreadRadius: 1,
                               blurRadius: 4,
-                              offset: Offset(0, 1), // changes position of shadow
+                              offset:
+                                  Offset(0, 1), // changes position of shadow
                             ),
                           ],
                         ),
                         child: IconButton(
-                          icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+                          icon: Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border),
                           color: Colors.red,
                           onPressed: () {
                             toggleFavorite(data['id']);
