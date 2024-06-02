@@ -339,7 +339,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
     );
   }
 }

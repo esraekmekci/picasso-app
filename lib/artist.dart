@@ -21,7 +21,6 @@ class ArtistPage extends StatefulWidget {
 class _ArtistPageState extends State<ArtistPage> with RouteAware {
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   late Future<String> artistDatas;
-  final int _currentIndex = 0;
 
   @override
   void initState() {
@@ -186,7 +185,7 @@ class _ArtistPageState extends State<ArtistPage> with RouteAware {
                         future: checkIfLiked(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Icon(Icons.favorite_border, color: Colors.red);
+                            return const Icon(Icons.favorite_border, color: Colors.red);
                           }
                           bool isLiked = snapshot.data ?? false;
                           return IconButton(
@@ -231,7 +230,7 @@ class _ArtistPageState extends State<ArtistPage> with RouteAware {
                         return Center(child: Text('Failed to load artworks: ${snapshot.error}'));
                       }
                       if (snapshot.data == null || snapshot.data!.isEmpty) {
-                        return Center(child: Text('No artworks available'));
+                        return const Center(child: Text('No artworks available'));
                       }
 
                       List<Map<String, dynamic>> artworks = snapshot.data!;
@@ -277,7 +276,7 @@ class _ArtistPageState extends State<ArtistPage> with RouteAware {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
     );
   }
 }

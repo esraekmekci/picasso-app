@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
-  final int currentIndex;
-  const CustomBottomNavBar({Key? key, required this.currentIndex}) : super(key: key);
+  final int? currentIndex;  // Allows null to indicate no selection
+  const CustomBottomNavBar({Key? key, this.currentIndex}) : super(key: key);
 
   @override
   State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
 }
 
 class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
-  late int _currentIndex;
+  int? _currentIndex;
 
   @override
   void initState() {
@@ -18,9 +18,14 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   }
 
   void _onItemTapped(int index) {
+    if (_currentIndex == index) {
+      return; // Prevents navigation to the same page.
+    }
+
     setState(() {
       _currentIndex = index;
     });
+    
     switch (index) {
       case 0:
         Navigator.pushNamedAndRemoveUntil(context, '/discover', (route) => false);
@@ -37,7 +42,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: _currentIndex,
+      currentIndex: _currentIndex ?? 0,  // Defaults to 0 if _currentIndex is null
       onTap: _onItemTapped,
       items: const [
         BottomNavigationBarItem(
@@ -53,6 +58,10 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
           label: 'Favorites',
         ),
       ],
+      selectedItemColor: _currentIndex != null ? Theme.of(context).primaryColor : Colors.grey,
+      unselectedItemColor: Colors.grey,
+      showUnselectedLabels: true,
+      type: BottomNavigationBarType.fixed,
     );
   }
 }

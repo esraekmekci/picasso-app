@@ -161,7 +161,7 @@ class _CategoryPageState extends State<CategoryPage> {
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -190,7 +190,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     Colors.black.withOpacity(0.6),
                     Colors.transparent,
                   ],
-                  stops: [0.6, 1.0],
+                  stops: const [0.6, 1.0],
                 ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(10),
@@ -283,7 +283,7 @@ class _CategoryPageState extends State<CategoryPage> {
           Expanded(child: buildItemsList()),
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
     );
   }
 
