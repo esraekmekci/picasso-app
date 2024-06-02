@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
+import 'daily.dart';
 import 'resetpassword.dart';
 
 class LoginPage extends StatefulWidget {
@@ -77,14 +78,18 @@ class _LoginPageState extends State<LoginPage> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ResetPasswordPage()),
-                          );
+                          Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ArtDetailsPage()),
+                          (Route<dynamic> route) => false,
+                        );
+
+
+                          
                         },
-                        child: Text(
+                        child: const Text(
                           'Forgot your password?',
-                          style: TextStyle(color: Colors.blueAccent, decoration: TextDecoration.underline),
+                          style: TextStyle(color: Colors.blueAccent, fontSize: 15),
                         ),
                       ),
                     ),
@@ -125,11 +130,11 @@ class _LoginPageState extends State<LoginPage> {
                       child: RichText(
                         text: TextSpan(
                           text: 'Don’t have an account? ',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style: const TextStyle(color: Colors.white, fontSize: 17),
                           children: <TextSpan>[
                             TextSpan(
                               text: 'Sign Up',
-                              style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                              style: const TextStyle(color: Colors.blue),
                               recognizer: TapGestureRecognizer()..onTap = () {
                                 Navigator.pushNamed(context, '/signup');
                               },
