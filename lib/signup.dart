@@ -134,16 +134,19 @@ class _SignUpPageState extends State<SignUpPage> {
                         );
 
                         if (userCredential.user != null) {
-                          await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-                            'username': _nameController.text.trim(),
-                            'email': _emailController.text.trim()
-                          });
-
+                          // Send verification email
+                          await userCredential.user!.sendEmailVerification();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Successfully registered')),
+                            const SnackBar(content: Text('A verification email has been sent. Please check your inbox.')),
                           );
 
-                          // Navigate to the login page after showing success message
+                          // Set user data in Firestore
+                          await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+                            'username': _nameController.text.trim(),
+                            'email': _emailController.text.trim(),
+                          });
+
+                          // Optionally navigate to the login page or a waiting page that checks for verification
                           Future.delayed(const Duration(seconds: 2), () {
                             Navigator.pushNamed(context, '/login');
                           });
