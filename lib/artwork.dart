@@ -270,29 +270,34 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                           ),
                           const SizedBox(height: 20),
                           Row(
-                          children: [
-                            Wrap(
-                              spacing: 8.0,
-                              children: data['movements'].map<Widget>((movement) {
-                                return ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
-                                    foregroundColor: const Color.fromARGB(255, 255, 255, 255), // Text color
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                  ),
-                                  onPressed: () => Navigator.pushNamed(context, '/movement', arguments: movement),
-                                  child: Text(movement['name']),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Text("Movements:   ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 8.0,
+                                  children: List<Widget>.generate(data['movements'].length, (int index) {
+                                    return ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                        foregroundColor: Colors.white, // Text color
+                                        elevation: 2,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      ),
+                                      onPressed: () => Navigator.pushNamed(context, '/movement', arguments: data['movements'][index]),
+                                      child: Text(data['movements'][index]['name']),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
 
                         const SizedBox(height: 20),
                         Row(
                           children: [
+                            const Text("Museum:       ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
