@@ -37,12 +37,15 @@ class _FilterPageState extends State<FilterPage> {
 
     selectedCountry = widget.selectedCountryProp;
 
-    if (widget.category == 'artworks' || widget.category == 'artists' || widget.category == 'movements') {
+    if (widget.category == 'artworks' || widget.category == 'artists') {
       fetchMovements();
       fetchPeriods();
     }
     if (widget.category == 'museums') {
       fetchMuseumRegions();
+    }
+    if (widget.category == 'movements') {
+      fetchMovementsPeriods();
     }
   }
 
@@ -89,6 +92,21 @@ class _FilterPageState extends State<FilterPage> {
     });
   }
 
+  void fetchMovementsPeriods() async {
+    setState(() {
+      periods = [
+        '1300s',
+        '1400s',
+        '1500s',
+        '1600s',
+        '1700s',
+        '1800s',
+        '1900s'
+      ]; // Example static periods
+      showMoreMap['Period'] = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,6 +119,7 @@ class _FilterPageState extends State<FilterPage> {
               buildFilterTile('Period', periods),
             if (widget.category == 'artworks')
               buildFilterTile('Movement', movements),
+              
             if (widget.category == 'museums') ...[
               buildFilterTile('Country', regions),
               if (selectedCountry != null) buildCityFilter(selectedCountry!),
@@ -210,6 +229,17 @@ class _FilterPageState extends State<FilterPage> {
       '1800s': [1800, 1899],
       '1900s': [1900, 1999]
     };
+
+    Map<String, List<int>> movementPeriodYearRanges = {
+    '1300s': [1300, 1399],
+    '1400s': [1400, 1499],
+    '1500s': [1500, 1599],
+    '1600s': [1600, 1699],
+    '1700s': [1700, 1799],
+    '1800s': [1800, 1899],
+    '1900s': [1900, 1999]
+  };
+
 
     if (widget.category == 'artworks') {
       // Filter by periods as year ranges, if any
@@ -364,10 +394,42 @@ class _FilterPageState extends State<FilterPage> {
         'selectedCountry': selectedCountry
       });
     }
-
-    if (widget.category == 'movements') {
-      
+  if (widget.category == 'movements') {
+    // Filter by selected periods
+    List<String> selectedPeriods = selectedFilters.where((f) => periods.contains(f)).toList();
+    if (selectedPeriods.isNotEmpty) {
+      List<String> periodList = selectedPeriods.map((period) => period).toList();
+      queries.add(baseQuery.where('period', arrayContainsAny: periodList));
+    } else {
+      // If no period is selected, add the base query as a fallback
+      queries.add(baseQuery);
     }
+
+    // Execute the queries and combine the results
+    List<String> filteredMovementNames = [];
+    for (var query in queries) {
+      var snapshot = await query.get();
+      filteredMovementNames.addAll(snapshot.docs
+          .map((doc) {
+            var data = doc.data();
+            return data is Map<String, dynamic> ? data['name'] as String? : null;
+          })
+          .where((name) => name != null)
+          .cast<String>()
+          .toList());
+    }
+
+    // Remove duplicates, if any
+    filteredMovementNames = filteredMovementNames.toSet().toList();
+
+    // Navigate back and pass the filtered movement names
+    Navigator.pop(context, {
+      'filteredNames': filteredMovementNames,
+      'selectedFilters': selectedFilters,
+      'selectedCountry': selectedCountry
+    });
+  }
+
   }
 
   void resetFilters() {
