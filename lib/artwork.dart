@@ -1,32 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Ensure you have the intl package installed
 import 'package:picasso/appbar.dart';
 import 'package:picasso/loading.dart';
+import 'artist.dart'; // Make sure this import path is correct
 import 'package:picasso/navbar.dart';
-import 'artist.dart';
-import 'main.dart'; // Make sure this import path is correct
+import 'main.dart'; // Import the main file to access routeObserver
 import 'package:google_fonts/google_fonts.dart';
 
-class ArtDetailsPage extends StatefulWidget {
-  const ArtDetailsPage({super.key});
+class ArtworkDetailPage extends StatefulWidget {
+  final String artworkId;
+
+  const ArtworkDetailPage({super.key, required this.artworkId});
 
   @override
-  _ArtDetailsPageState createState() => _ArtDetailsPageState();
+  _ArtworkDetailPageState createState() => _ArtworkDetailPageState();
 }
 
-class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
-  late PageController _pageController;
-  late Future<List<Map<String, dynamic>>>? artworkDataList;
+class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
+  late Future<Map<String, dynamic>> artworkData;
   bool isLiked = false;
-  final int _currentIndex = 1;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 7); // Start from today's artwork
-    artworkDataList = getArtworks();
+    artworkData = getArtwork(widget.artworkId);
+    checkIfLiked(widget.artworkId);
   }
 
   @override
@@ -35,82 +34,84 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
   }
 
-  Future<List<Map<String, dynamic>>> getArtworks() async {
-    final DateTime now = DateTime.now();
-    final List<Map<String, dynamic>> artworks = [];
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
 
-    for (int i = 0; i <= 7; i++) { // Adjust the range as needed to include more previous days
-      DateTime date = now.subtract(Duration(days: i));
-      DateTime startOfDay = DateTime(date.year, date.month, date.day);
-      DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+  @override
+  void didPopNext() {
+    // Called when the current route has been popped off, and the user returns to this route
+    setState(() {
+      artworkData = getArtwork(widget.artworkId);
+      checkIfLiked(widget.artworkId); // Recheck if the artwork is liked
+    });
+  }
 
-      var snapshot = await FirebaseFirestore.instance
-          .collection('artworks')
-          .where('publishdate', isGreaterThanOrEqualTo: startOfDay)
-          .where('publishdate', isLessThanOrEqualTo: endOfDay)
-          .orderBy('publishdate')
-          .limit(1)
-          .get();
+  Future<Map<String, dynamic>> getArtwork(String artworkId) async {
+    final DocumentSnapshot artworkSnapshot = await FirebaseFirestore.instance
+        .collection('artworks')
+        .doc(artworkId)
+        .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        DocumentSnapshot artwork = snapshot.docs.first;
-        Map<String, dynamic> artworkInfo = artwork.data() as Map<String, dynamic>;
-        DocumentReference artistRef = artworkInfo['artist'] as DocumentReference;
-        List<DocumentReference> movementRefs = (artworkInfo['movement'] as List).cast<DocumentReference>();
-        DocumentReference museumRef = artworkInfo['museum'] as DocumentReference;
-
-        DocumentSnapshot artistSnapshot = await artistRef.get();
-        List<DocumentSnapshot> movementSnapshots = await Future.wait(movementRefs.map((ref) => ref.get()));
-        DocumentSnapshot museumSnapshot = await museumRef.get();
-
-        // Format the date
-        DateTime publishDate = artworkInfo['publishdate']?.toDate();
-        String formattedDate = publishDate != null ? DateFormat('MMM d').format(publishDate) : 'Unknown';
-
-        artworks.add({
-          'id': artwork.id,
-          'image': artworkInfo['framedImage'] ?? 'Unknown',
-          'name': artworkInfo['name'] ?? 'Unknown',
-          'year': artworkInfo['year'] ?? 'Unknown',
-          'description': artworkInfo['description'] ?? 'No description available',
-          'artist': {
-            'id': artistSnapshot.id, // Document id
-            'image': artistSnapshot['image'],
-            'name': artistSnapshot['name'],
-            'deathdate': artistSnapshot['deathdate'],
-            'birthdate': artistSnapshot['birthdate'],
-            'description': artistSnapshot['description'],
-          },
-          'movements': movementSnapshots.map((snapshot) {
-            return {
-              'id': snapshot.id,
-              'name': snapshot['name'],
-              'description': snapshot['description'],
-              'image': snapshot['image'],
-            };
-          }).toList(),
-
-          'museum': {
-            'id': museumSnapshot.id, // Document id
-            'city': museumSnapshot['city'],
-            'country': museumSnapshot['country'],
-            'image': museumSnapshot['image'],
-            'name': museumSnapshot['name'],
-            'description': museumSnapshot['description'],
-          },
-          'formattedDate': formattedDate // Include formatted date in the return data
-        });
-      }
+    if (!artworkSnapshot.exists) {
+      throw Exception('Artwork not found');
     }
 
-    return artworks.reversed.toList(); // Reverse the list to show today first
+    final Map<String, dynamic> artworkInfo =
+        artworkSnapshot.data() as Map<String, dynamic>;
+    final DocumentReference artistRef =
+        artworkInfo['artist'] as DocumentReference;
+    final List<DocumentReference> movementRefs =
+        (artworkInfo['movement'] as List).cast<DocumentReference>();
+    final DocumentReference museumRef =
+        artworkInfo['museum'] as DocumentReference;
+
+    final DocumentSnapshot artistSnapshot = await artistRef.get();
+    final List<DocumentSnapshot> movementSnapshots =
+        await Future.wait(movementRefs.map((ref) => ref.get()));
+    final DocumentSnapshot museumSnapshot = await museumRef.get();
+
+    return {
+      'id': artworkSnapshot.id,
+      'image': artworkInfo['framedImage'] ?? 'Unknown',
+      'name': artworkInfo['name'] ?? 'Unknown',
+      'year': artworkInfo['year'] ?? 'Unknown',
+      'description': artworkInfo['description'] ?? 'No description available',
+      'artist': {
+        'id': artistSnapshot.id, // Document id
+        'image': artistSnapshot['image'],
+        'name': artistSnapshot['name'],
+        'deathdate': artistSnapshot['deathdate'],
+        'birthdate': artistSnapshot['birthdate'],
+        'description': artistSnapshot['description'],
+      },
+      'movements': movementSnapshots.map((snapshot) {
+        return {
+          'id': snapshot.id,
+          'name': snapshot['name'],
+          'description': snapshot['description'],
+          'image': snapshot['image'],
+        };
+      }).toList(),
+      'museum': {
+        'id': museumSnapshot.id, // Document id
+        'city': museumSnapshot['city'],
+        'country': museumSnapshot['country'],
+        'image': museumSnapshot['image'],
+        'name': museumSnapshot['name'],
+        'description': museumSnapshot['description'],
+      },
+    };
   }
 
   Future<void> toggleFavorite(String artworkId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
     if (doc.exists) {
@@ -127,31 +128,33 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
         });
       }
       setState(() {
-        // Refresh the page to update the favorite icon
+        isLiked = !isLiked;
       });
     }
   }
 
-  Future<bool> checkIfLiked(String artworkId) async {
+  Future<void> checkIfLiked(String artworkId) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
+    if (user == null) return;
 
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
     if (doc.exists) {
       List<dynamic> favorites = doc.data()?['favorites'] ?? [];
-      return favorites.contains(artworkId);
+      setState(() {
+        isLiked = favorites.contains(artworkId);
+      });
     }
-    return false;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: artworkDataList,
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: artworkData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: LoadingGif());
@@ -159,91 +162,76 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
           if (snapshot.hasError) {
             return Center(child: Text('Failed to load art details'));
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No Art for Today'));
+          if (!snapshot.hasData) {
+            return Center(child: Text('Artwork not found'));
           }
 
-          List<Map<String, dynamic>> artworks = snapshot.data!;
+          final data = snapshot.data!;
 
-          return PageView.builder(
-            controller: _pageController,
-            itemCount: artworks.length,
-            itemBuilder: (context, index) {
-              Map<String, dynamic> data = artworks[index];
-
-              return Padding(
-                padding: const EdgeInsets.all(15),
-                child: ListView(
+          return Padding(
+            padding: const EdgeInsets.all(15),
+            child: ListView(
+              children: [
+                SizedBox(height: 10),
+                Image.asset(data['image']),
+                SizedBox(height: 20),
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                          margin: const EdgeInsets.only(top: 5, right: 0),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(181, 255, 255, 255), // Change background color as needed
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.1),
-                                spreadRadius: 1,
-                                blurRadius: 3,
-                                offset: const Offset(0, 1), // changes position of shadow
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200], // Light grey background
+                        borderRadius:
+                            BorderRadius.circular(10), // Rounded corners
+                      ),
+                      padding: const EdgeInsets.all(15),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                // Ensure text does not overflow and wraps to the next line
+                                child: Text(
+                                  data['name'],
+                                  style: GoogleFonts.cormorantUpright(
+                                    fontSize: 35,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  softWrap: true, // Allow text to wrap
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color:
+                                      Colors.grey[200], // Light grey background
+                                  borderRadius: BorderRadius.circular(
+                                      25), // Rounded corners
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color.fromARGB(255, 245, 228, 78)
+                                          .withOpacity(0.1),
+                                      spreadRadius: 1,
+                                      blurRadius: 4,
+                                      offset: Offset(
+                                          0, 1), // changes position of shadow
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                          child: Text(
-                            data['formattedDate'],
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Image.asset(data['image']),
-                    const SizedBox(height: 10),
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 240, 240, 240), // Light grey background
-                            borderRadius: BorderRadius.circular(10), // Rounded corners
-                          ),
-                          padding: const EdgeInsets.all(15),
-                          child: Column(
+                          SizedBox(height: 10),
+                          Row(
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded( // Ensure text does not overflow and wraps to the next line
-                                    child: Text(
-                                      data['name'],
-                                      style: GoogleFonts.cormorantUpright(
-                                        fontSize: 35,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                      softWrap: true, // Allow text to wrap
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  ElevatedButton(
+                              ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                          backgroundColor: Color.fromARGB(255, 27, 90, 29), // Background color
                                           foregroundColor: Colors.white, // Text color
                                           elevation: 2,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                         ),
                                         onPressed: () => Navigator.push(
                                           context,
@@ -262,24 +250,23 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                         ),
                                         child: Text(data['artist']['name']),
                                     ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        data['year']?.toString() ?? 'Unknown Year',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
 
-
-                              const SizedBox(height: 20),
+                              SizedBox(width: 10),
                               Text(
-                                data['description'],
-                                style: const TextStyle(fontSize: 16),
+                                data['year']?.toString() ?? 'Unknown Year',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
                               ),
-                             const SizedBox(height: 20),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            data['description'],
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 20),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -305,71 +292,64 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                             ],
                           ),
 
-                              const SizedBox(height: 20),
-                              Row(
-                                children: [
-                                  const Text("Museum:       ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
-                                      foregroundColor: Colors.white, // Text color
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    ),
-                                    onPressed: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
-                                    child: Text(data['museum']['name']),
-                                ),
-
-                                ],
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Text("Museum:       ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                foregroundColor: const Color.fromARGB(255, 255, 255, 255), // Text color
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          top: -15,
-                          right: 10,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200], // Light grey background
-                              borderRadius: BorderRadius.circular(25), // Rounded corners
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color.fromARGB(255, 245, 228, 78).withOpacity(0.1),
-                                  spreadRadius: 1,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1), // changes position of shadow
-                                ),
-                              ],
+                              onPressed: () => Navigator.pushNamed(context, '/museum', arguments: data['museum']),
+                              child: Text(data['museum']['name']),
                             ),
-                            child: FutureBuilder<bool>(
-                              future: checkIfLiked(data['id']),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const Icon(Icons.favorite_border, color: Colors.red);
-                                }
-                                bool isLiked = snapshot.data ?? false;
-                                return IconButton(
-                                  icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                  color: Colors.red,
-                                  onPressed: () {
-                                    toggleFavorite(data['id']);
-                                  },
-                                );
-                              },
-                            ),
-                          ),
+                          ],
                         ),
-                      ],
+
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      top: -15,
+                      right: 10,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200], // Light grey background
+                          borderRadius:
+                              BorderRadius.circular(25), // Rounded corners
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color.fromARGB(255, 245, 228, 78)
+                                  .withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset:
+                                  Offset(0, 1), // changes position of shadow
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border),
+                          color: Colors.red,
+                          onPressed: () {
+                            toggleFavorite(data['id']);
+                          },
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              );
-            },
+              ],
+            ),
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
     );
   }
 }

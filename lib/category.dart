@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:picasso/appbar.dart';
+import 'package:picasso/loading.dart';
 import 'package:picasso/navbar.dart';
 import 'package:picasso/filter.dart';
 import 'package:picasso/artwork.dart';
@@ -68,8 +69,7 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   void _filterItems(String query) {
-    var _items =
-        _itemsFromFilterPage.isEmpty ? _allItems : _itemsFromFilterPage;
+    var _items = _itemsFromFilterPage.isEmpty ? _allItems : _itemsFromFilterPage;
 
     final filteredItems = _items.where((item) {
       final name = item['name'] as String;
@@ -90,7 +90,12 @@ class _CategoryPageState extends State<CategoryPage> {
 
       return matchesName;
     }).toList();
-    _itemsController.add(filteredItems);
+    
+    if (filteredItems.isEmpty && currentFilterState.isNotEmpty) {
+      _itemsController.add([]);
+    } else {
+      _itemsController.add(filteredItems);
+    }
   }
 
   @override
@@ -127,7 +132,7 @@ class _CategoryPageState extends State<CategoryPage> {
       stream: _itemsController.stream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: LoadingGif());
         }
         if (snapshot.hasError) {
           return Center(child: Text("An error occurred: ${snapshot.error}"));
@@ -267,17 +272,19 @@ class _CategoryPageState extends State<CategoryPage> {
                         ),
                       ),
                     );
-                    currentFilterState = filterResult["selectedFilters"];
-                    currentSelectedCountry = filterResult["selectedCountry"];
-                    final filteredItems = filterResult["filteredNames"];
-                    _itemsFromFilterPage = filteredItems != null
-                        ? _allItems
-                            .where(
-                                (item) => filteredItems.contains(item['name']))
-                            .toList()
-                        : _allItems;
+                    if (filterResult != null) {
+                      currentFilterState = filterResult["selectedFilters"];
+                      currentSelectedCountry = filterResult["selectedCountry"];
+                      final filteredItems = filterResult["filteredNames"];
+                      _itemsFromFilterPage = filteredItems != null
+                          ? _allItems
+                              .where(
+                                  (item) => filteredItems.contains(item['name']))
+                              .toList()
+                          : _allItems;
 
-                    _onSearchChanged();
+                      _onSearchChanged();
+                    }
                   },
                 ),
               ],

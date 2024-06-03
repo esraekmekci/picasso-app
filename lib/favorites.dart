@@ -1,4 +1,6 @@
 //import 'dart:ffi';
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -148,7 +150,7 @@ Widget _buildProfileHeader(User user) {
                       ),
                         child: CircleAvatar(
                           radius: 20,
-                          backgroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                           child: Icon(
                             Icons.edit,
                             color: Colors.amber[600],
@@ -169,20 +171,6 @@ Widget _buildProfileHeader(User user) {
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/settings'); // Ayarlar sayfasına yönlendirme
-                      },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.transparent,
-                        child: Icon(
-                          Icons.settings,
-                          color: Colors.amber[600],
-                          size: 20,
-                        ),
                       ),
                     ),
                   ],

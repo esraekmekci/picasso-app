@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:picasso/login.dart';  // Ensure the path to your LoginPage is correct
+import 'package:picasso/login.dart';
+import 'settings.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isFavoritesPage;  // Check if it is the favorites page
@@ -30,8 +31,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: Icon(Icons.arrow_back, color: Colors.amber.shade600),
               onPressed: () => Navigator.pop(context),
             )
+          else if (currentRoute == '/favorites')
+            IconButton(
+              icon: Icon(Icons.settings, color: Colors.amber.shade600),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage())),
+          )
           else
-            SizedBox(width: 48), // Placeholder for back button to keep the logo centered
+            SizedBox(width: 48), // Placeholder to keep the logo centered
           Flexible(
             child: Image.asset(
               'assets/picaßo.png',

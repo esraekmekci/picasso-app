@@ -156,62 +156,67 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
-  Widget buildFilterTile(String title, List<String> options) {
-    bool showMore = showMoreMap[title] ?? false;
-    int initialDisplayCount = 4;
-    List<String> displayedOptions = showMore ? options : options.take(initialDisplayCount).toList();
+Widget buildFilterTile(String title, List<String> options) {
+  bool showMore = showMoreMap[title] ?? false;
+  int itemsPerRow = (MediaQuery.of(context).size.width / 100).floor(); // Ekran genişliğine göre her satırda kaç öğe gösterileceğini belirle
+  int initialDisplayCount = itemsPerRow * 2; // İlk gösterilecek öğe sayısı, iki satır
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: displayedOptions
-                .map((option) => FilterChip(
-                      label: Text(option),
-                      selected: (title == 'Country' && option == selectedCountry) ||
-                                (title != 'Country' && selectedFilters.contains(option)),
-                      onSelected: (bool selected) {
-                        setState(() {
-                          if (selected) {
-                            if (title == 'Country') {
-                              selectedCountry = option;
-                              selectedFilters.clear(); // Clear city selection when a new country is selected
-                            } else {
-                              selectedFilters.add(option);
-                            }
-                          } else {
-                            if (title == 'Country') {
-                              selectedCountry = null;
-                              selectedFilters.clear(); // Clear city selection when country selection is cleared
-                            } else {
-                              selectedFilters.remove(option);
-                            }
-                          }
-                        });
-                      },
-                    ))
-                .toList(),
-          ),
-          if (options.length > initialDisplayCount)
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  showMoreMap[title] = !showMore;
-                });
-              },
-              child: Text(showMore ? 'Show Less' : 'Show More'),
-            ),
-        ],
-      ),
-    );
+  if (widget.category == 'movements') {
+    initialDisplayCount = 8; 
   }
+  List<String> displayedOptions = showMore ? options : options.take(initialDisplayCount).toList();
+
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 4.0,
+          children: displayedOptions
+              .map((option) => FilterChip(
+                    label: Text(option),
+                    selected: (title == 'Country' && option == selectedCountry) ||
+                              (title != 'Country' && selectedFilters.contains(option)),
+                    onSelected: (bool selected) {
+                      setState(() {
+                        if (selected) {
+                          if (title == 'Country') {
+                            selectedCountry = option;
+                            selectedFilters.clear(); // Clear city selection when a new country is selected
+                          } else {
+                            selectedFilters.add(option);
+                          }
+                        } else {
+                          if (title == 'Country') {
+                            selectedCountry = null;
+                            selectedFilters.clear(); // Clear city selection when country selection is cleared
+                          } else {
+                            selectedFilters.remove(option);
+                          }
+                        }
+                      });
+                    },
+                  ))
+              .toList(),
+        ),
+        if (options.length > initialDisplayCount)
+          TextButton(
+            onPressed: () {
+              setState(() {
+                showMoreMap[title] = !showMore;
+              });
+            },
+            child: Text(showMore ? 'Show Less' : 'Show More'),
+          ),
+      ],
+    ),
+  );
+}
+
 
   Widget buildCityFilter(String country) {
     List<String> cities = countryCityMap[country]?.toList() ?? [];
