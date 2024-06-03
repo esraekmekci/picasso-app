@@ -200,7 +200,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                 children: [
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                      backgroundColor: Color.fromARGB(255, 96, 137, 96), // Background color
                                       foregroundColor: Colors.white, // Text color
                                       elevation: 2,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -249,7 +249,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                   children: List<Widget>.generate(data['movements'].length, (int index) {
                                     return ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                        backgroundColor: const Color.fromARGB(255, 96, 137, 96), // Background color
                                         foregroundColor: Colors.white, // Text color
                                         elevation: 2,
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -270,7 +270,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                   const Text("Museum:       ", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                      backgroundColor: const Color.fromARGB(255, 96, 137, 96), // Background color
                                       foregroundColor: Colors.white, // Text color
                                       elevation: 2,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

@@ -162,7 +162,7 @@ class _FilterPageState extends State<FilterPage> {
     int initialDisplayCount = itemsPerRow * 2; // İlk gösterilecek öğe sayısı, iki satır
 
     if (widget.category == 'movements') {
-      initialDisplayCount = 4; 
+      initialDisplayCount = 5; 
     }
     List<String> displayedOptions = showMore ? options : options.take(initialDisplayCount).toList();
 
