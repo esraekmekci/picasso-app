@@ -121,91 +121,91 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             children: <Widget>[
               ExpansionTile(
-                title: Text('Update Username'),
-                leading: Icon(Icons.person),
+                title: const Text('Update Username'),
+                leading: const Icon(Icons.person, color: Colors.green),
                 children: <Widget>[
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _usernameController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'New Username',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _currentPasswordControllerForUsername,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Current Password',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: _updateUsername,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[300],
+                      backgroundColor: Colors.green[300],
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       textStyle: const TextStyle(fontSize: 16),
                     ),
-                    child: SizedBox(
+                    child: const SizedBox(
                       width: double.infinity,
-                      child: Center(child: Text('Update Username', style: TextStyle(color: Color.fromARGB(255, 63, 62, 62)))),
+                      child: Center(child: Text('Update Username', style: TextStyle(color: Colors.white))),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ExpansionTile(
-                title: Text('Update Password'),
-                leading: Icon(Icons.lock),
+                title: const Text('Update Password'),
+                leading: const Icon(Icons.lock, color: Colors.green),
                 children: <Widget>[
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'New Password',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Confirm New Password',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextFormField(
                     controller: _currentPasswordControllerForPassword,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Current Password',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: _updatePassword,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[300],
+                      backgroundColor: Colors.green[300],
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       textStyle: const TextStyle(fontSize: 16),
                     ),
-                    child: SizedBox(
+                    child: const SizedBox(
                       width: double.infinity,
-                      child: Center(child: Text('Update Password', style: TextStyle(color: Color.fromARGB(255, 63, 62, 62)))),
+                      child: Center(child: Text('Update Password', style: TextStyle(color: Colors.white))),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                 ],
               ),
-              if (_isLoading) LoadingGif(),
+              if (_isLoading) const LoadingGif(),
             ],
           ),
         ),

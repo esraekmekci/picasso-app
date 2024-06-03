@@ -136,7 +136,7 @@ class _FilterPageState extends State<FilterPage> {
                       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                       textStyle: const TextStyle(fontSize: 16),
                     ),
-                    child: const Text('Apply Filters'),
+                    child: const Text('Apply Filters', style: TextStyle(color: Colors.white)),
                   ),
                   ElevatedButton(
                     onPressed: resetFilters,
@@ -145,7 +145,7 @@ class _FilterPageState extends State<FilterPage> {
                       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                       textStyle: const TextStyle(fontSize: 16),
                     ),
-                    child: const Text('Reset Filters'),
+                    child: const Text('Reset Filters', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
