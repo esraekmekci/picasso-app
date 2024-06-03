@@ -103,6 +103,15 @@ class _LoginPageState extends State<LoginPage> {
                             email: _emailController.text.trim(),
                             password: _passwordController.text.trim(),
                           );
+
+                          if (userCredential.user != null && !userCredential.user!.emailVerified) {
+                            await FirebaseAuth.instance.signOut();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please verify your email before logging in')),
+                            );
+                            return;
+                          }
+
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (context) => ArtDetailsPage()),

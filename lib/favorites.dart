@@ -99,7 +99,7 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
     );
   }
 
-  Widget _buildProfileHeader(User user) {
+Widget _buildProfileHeader(User user) {
   return FutureBuilder<DocumentSnapshot>(
     future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
     builder: (context, snapshot) {
@@ -113,13 +113,51 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () => _showIconSelectionDialog(context, user.uid),
-                  child: CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.transparent,
-                    backgroundImage: AssetImage(userData['icon'] ?? "assets/user1.png"),
-                  ),
+                Stack(
+                  children: [
+                    // Circular frame around profile icon with black border
+                    Container(
+                      width: 130, // Adjust size as needed
+                      height: 130,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey, width: 1), // Border color and width
+                      ),
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.transparent,
+                        child: CircleAvatar(
+                          radius: 55,
+                          backgroundColor: Colors.transparent,
+                          backgroundImage: AssetImage(userData['icon'] ?? "assets/user1.png"),
+                        ),
+                      ),
+                    ),
+                    // Edit icon
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () => _showIconSelectionDialog(context, user.uid),
+                        child: Container(
+                      width: 40, // Adjust size as needed
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey, width: 1), // Border color and width
+                      ),
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.edit,
+                            color: Colors.amber[600],
+                            size: 20,
+                          ),
+                        ),),
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 10), // Dikey boşluk
                 Row(
@@ -133,11 +171,19 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
                         overflow: TextOverflow.visible,
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.settings),
-                      onPressed: () {
+                    GestureDetector(
+                      onTap: () {
                         Navigator.pushNamed(context, '/settings'); // Ayarlar sayfasına yönlendirme
                       },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.transparent,
+                        child: Icon(
+                          Icons.settings,
+                          color: Colors.amber[600],
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -157,6 +203,8 @@ class _FavoritesPageState extends State<FavoritesPage> with TickerProviderStateM
     },
   );
 }
+
+
 
 
   void _showIconSelectionDialog(BuildContext context, String userId) {
