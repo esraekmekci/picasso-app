@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int? currentIndex;  // Allows null to indicate no selection
-  const CustomBottomNavBar({Key? key, this.currentIndex}) : super(key: key);
+  const CustomBottomNavBar({super.key, this.currentIndex});
 
   @override
   State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
@@ -44,23 +44,28 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     return BottomNavigationBar(
       currentIndex: _currentIndex ?? 0,  // Defaults to 0 if _currentIndex is null
       onTap: _onItemTapped,
-      items: const [
-        BottomNavigationBarItem(
+      items: [
+        const BottomNavigationBarItem(
           icon: Icon(Icons.search),
-          label: 'Discover',
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.panorama_horizontal_select_rounded),
-          label: 'Daily',
+          icon: Image.asset(
+            _currentIndex == 1 ? 'assets/frame_amber.png' : 'assets/frame_grey.png', // Görüntü dosyanızın yolu
+            width: 30, // Genişliği ayarlayın
+            height: 30, // Yüksekliği ayarlayın
+          ),
+          label: '',
         ),
-        BottomNavigationBarItem(
+        const BottomNavigationBarItem(
           icon: Icon(Icons.favorite),
-          label: 'Favorites',
+          label: '',
         ),
       ],
       selectedItemColor: _currentIndex != null ? Theme.of(context).primaryColor : Colors.grey,
       unselectedItemColor: Colors.grey,
-      showUnselectedLabels: true,
+      showSelectedLabels: false,  // Hides selected labels
+      showUnselectedLabels: false,
       type: BottomNavigationBarType.fixed,
     );
   }

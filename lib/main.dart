@@ -34,8 +34,20 @@ class PicassoApp extends StatelessWidget {
     return MaterialApp(
       title: 'Picaßo',
       theme: ThemeData(
-        primarySwatch: Colors.amber,
         fontFamily: GoogleFonts.quicksand().fontFamily,
+        primaryColor: Colors.amber.shade600,
+        tabBarTheme: const TabBarTheme(
+          labelColor: Colors.amber, // Seçili tab rengi
+          unselectedLabelColor: Colors.grey, // Seçili olmayan tab rengi
+          indicator: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.amber, // Seçili tabın altındaki çizgi rengi
+                width: 2.0,
+              ),
+            ),
+          ),
+        ),
       ),
       home: LoginPage(),
       navigatorObservers: [routeObserver], // Add the RouteObserver here

@@ -8,28 +8,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'artwork.dart';
 import 'main.dart';
 
-
 class MovementPage extends StatefulWidget {
   final dynamic movementData;
   const MovementPage({super.key, required this.movementData});
 
-    @override
-    _MovementPageState createState() => _MovementPageState();
+  @override
+  _MovementPageState createState() => _MovementPageState();
 }
 
 class _MovementPageState extends State<MovementPage> with RouteAware {
   late Future<String> movementDatas;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
-  bool isLiked = false;
 
   @override
   void initState() {
     super.initState();
     movementDatas = getMovement();
-    movementDatas.then((value){
+    movementDatas.then((value) {
       print(value);
     });
-    checkIfLiked();
     if (widget.movementData['id'] != null && widget.movementData['id'].isNotEmpty) {
       artworkDataList = getArtworksByMovement(widget.movementData['id']);
     } else {
@@ -54,8 +51,23 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
     // Called when the current route has been popped off, and the user returns to this route
     setState(() {
       movementDatas = getMovement();
-      checkIfLiked(); // Check if the artist is liked again when coming back
     });
+  }
+
+  Future<String> getMovement() async {
+    var snapshot = await FirebaseFirestore.instance
+        .collection('movements')
+        .where('name', isEqualTo: widget.movementData['name'])
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      DocumentSnapshot movement = snapshot.docs.first;
+      print(movement.id);
+      return movement.id;
+    } else {
+      return 'movementInfo';
+    }
   }
 
   Future<List<Map<String, dynamic>>> getArtworksByMovement(String movementId) async {
@@ -73,7 +85,7 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        print('No artworks found for museum');
+        print('No artworks found for movement');
         return [];
       }
 
@@ -90,68 +102,6 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
       print('Error fetching artworks: $error');
       return [];
     }
-  }
-
-  Future<bool> checkIfLiked() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-    String mid = '';
-    movementDatas.then((value){
-    mid = value;
-     });
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
-
-    if (doc.exists) {
-      List<dynamic> favoriteMovements = doc.data()?['favoriteMovements'] ?? [];
-
-      return favoriteMovements.contains(mid);
-    }
-    return false;
-  }
-
-  Future<void> toggleFavorite(String movementId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
-
-    if (doc.exists) {
-      List<dynamic> favoriteMovements = doc.data()?['favoriteMovements'] ?? [];
-      if (favoriteMovements.contains(movementId)) {
-        // Remove from favorites
-        await userRef.update({
-          'favoriteMovements': FieldValue.arrayRemove([movementId])
-        });
-      } else {
-        // Add to favorites
-        await userRef.update({
-          'favoriteMovements': FieldValue.arrayUnion([movementId])
-        });
-      }
-      setState(() {
-        isLiked = !isLiked;
-      });
-    }
-  }
-
-
-  Future<String> getMovement() async {
-    var snapshot = await FirebaseFirestore.instance
-          .collection('movements')
-          .where('name', isEqualTo: widget.movementData['name'])
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        DocumentSnapshot movement = snapshot.docs.first;
-        print(movement.id);
-        return movement.id;
-      }else{
-        return 'movementInfo';
-      }
-      
   }
 
   @override
@@ -180,26 +130,19 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
                           softWrap: true,
                         ),
                       ),
-                      FutureBuilder<bool>(
-                                future: checkIfLiked(),
-                                
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return const Icon(Icons.favorite_border, color: Colors.red);
-                                  }
-                                  bool isLiked = snapshot.data ?? false;
-                                  return IconButton(
-                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                    color: Colors.red,
-                                    onPressed: () {
-                                          movementDatas.then((value){
-                                          toggleFavorite(value);
-                                        });
-                                      
-                                    },
-                                  );
-                                },
-                              )
+                      // ignore: unnecessary_null_comparison
+                      movementDatas != null ? FutureBuilder<String>(
+                        future: movementDatas,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Icon(Icons.favorite_border, color: Colors.red);
+                          }
+                          if (snapshot.hasError || !snapshot.hasData) {
+                            return const Icon(Icons.favorite_border, color: Colors.red);
+                          }
+                          return FavoriteButton(movementId: snapshot.data!);
+                        },
+                      ) : const Icon(Icons.favorite_border, color: Colors.red),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -213,7 +156,6 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: artworkDataList,
                     builder: (context, snapshot) {
@@ -234,7 +176,7 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
                         physics: const NeverScrollableScrollPhysics(), // Prevents scrolling within the GridView
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.8,  // Adjusted for better display
+                          childAspectRatio: 0.8, // Adjusted for better display
                         ),
                         itemCount: artworks.length,
                         itemBuilder: (context, index) {
@@ -263,7 +205,6 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
                       );
                     },
                   ),
-
                 ],
               ),
             ),
@@ -271,6 +212,73 @@ class _MovementPageState extends State<MovementPage> with RouteAware {
         ),
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
+    );
+  }
+}
+
+class FavoriteButton extends StatefulWidget {
+  final String movementId;
+
+  const FavoriteButton({Key? key, required this.movementId}) : super(key: key);
+
+  @override
+  _FavoriteButtonState createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<FavoriteButton> {
+  bool isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfLiked();
+  }
+
+  Future<void> checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMovements = doc.data()?['favoriteMovements'] ?? [];
+      setState(() {
+        isLiked = favoriteMovements.contains(widget.movementId);
+      });
+    }
+  }
+
+  Future<void> toggleFavorite() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMovements = doc.data()?['favoriteMovements'] ?? [];
+      if (favoriteMovements.contains(widget.movementId)) {
+        await userRef.update({
+          'favoriteMovements': FieldValue.arrayRemove([widget.movementId])
+        });
+      } else {
+        await userRef.update({
+          'favoriteMovements': FieldValue.arrayUnion([widget.movementId])
+        });
+      }
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+      color: Colors.red,
+      onPressed: toggleFavorite,
     );
   }
 }

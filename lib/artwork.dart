@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Ensure you have the intl package installed
 import 'package:picasso/appbar.dart';
 import 'package:picasso/loading.dart';
 import 'artist.dart'; // Make sure this import path is correct
@@ -15,13 +14,13 @@ class ArtworkDetailPage extends StatefulWidget {
   const ArtworkDetailPage({super.key, required this.artworkId});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ArtworkDetailPageState createState() => _ArtworkDetailPageState();
 }
 
 class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
   late Future<Map<String, dynamic>> artworkData;
   bool isLiked = false;
-  int _currentIndex = 1;
 
   @override
   void initState() {
@@ -159,13 +158,13 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
         future: artworkData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: LoadingGif());
+            return const Center(child: LoadingGif());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Failed to load art details'));
+            return const Center(child: Text('Failed to load art details'));
           }
           if (!snapshot.hasData) {
-            return Center(child: Text('Artwork not found'));
+            return const Center(child: Text('Artwork not found'));
           }
 
           final data = snapshot.data!;
@@ -174,9 +173,9 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
             padding: const EdgeInsets.all(15),
             child: ListView(
               children: [
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Image.asset(data['image']),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -212,11 +211,11 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                                       25), // Rounded corners
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Color.fromARGB(255, 245, 228, 78)
+                                      color: const Color.fromARGB(255, 245, 228, 78)
                                           .withOpacity(0.1),
                                       spreadRadius: 1,
                                       blurRadius: 4,
-                                      offset: Offset(
+                                      offset: const Offset(
                                           0, 1), // changes position of shadow
                                     ),
                                   ],
@@ -224,16 +223,16 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                               ),
                             ],
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Row(
                             children: [
                               ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Color.fromARGB(255, 27, 90, 29), // Background color
+                                          backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
                                           foregroundColor: Colors.white, // Text color
                                           elevation: 2,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                         ),
                                         onPressed: () => Navigator.push(
                                           context,
@@ -253,7 +252,7 @@ class _ArtworkDetailPageState extends State<ArtworkDetailPage> with RouteAware {
                                         child: Text(data['artist']['name']),
                                     ),
 
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               Text(
                                 data['year']?.toString() ?? 'Unknown Year',
                                 style: const TextStyle(
