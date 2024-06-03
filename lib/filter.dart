@@ -217,7 +217,6 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 
-
   Widget buildCityFilter(String country) {
     List<String> cities = countryCityMap[country]?.toList() ?? [];
     return buildFilterTile('City', cities);
@@ -458,10 +457,15 @@ class _FilterPageState extends State<FilterPage> {
     }
   }
 
-  void resetFilters() {
-    setState(() {
-      selectedFilters.clear();
-      selectedCountry = null;
-    });
-  }
+void resetFilters() {
+  setState(() {
+    selectedFilters.clear();
+    selectedCountry = null;
+    showMoreMap.clear(); // Show more seçeneklerini de sıfırla
+  });
+
+  // Fetch all items again by triggering fetchInitialData
+  fetchInitialData();
+}
+
 }
