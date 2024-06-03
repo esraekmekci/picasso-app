@@ -111,8 +111,6 @@ flutter:
   assets:
     - assets/circle-heart.png
     - assets/search.png
-    - assets/frame.png
-    - assets/frame_icon.png
     - assets/dream.png
     - assets/picasso.jpg
     - assets/louvre.jpg
@@ -234,6 +232,8 @@ flutter:
     - assets/signup.png
     - assets/naive-art.jpg
     - assets/picaßo_icon.png
+    - assets/frame_grey.png
+    - assets/frame_amber.png
 
 
 

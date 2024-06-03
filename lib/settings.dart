@@ -151,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     child: SizedBox(
                       width: double.infinity,
-                      child: Center(child: Text('Update Username')),
+                      child: Center(child: Text('Update Username', style: TextStyle(color: Color.fromARGB(255, 63, 62, 62)))),
                     ),
                   ),
                   SizedBox(height: 10),
@@ -199,7 +199,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     child: SizedBox(
                       width: double.infinity,
-                      child: Center(child: Text('Update Password')),
+                      child: Center(child: Text('Update Password', style: TextStyle(color: Color.fromARGB(255, 63, 62, 62)))),
                     ),
                   ),
                   SizedBox(height: 10),

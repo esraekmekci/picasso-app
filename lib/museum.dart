@@ -15,6 +15,7 @@ class MuseumPage extends StatefulWidget {
   const MuseumPage({super.key, required this.museumData});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MuseumPageState createState() => _MuseumPageState();
 }
 
@@ -22,23 +23,19 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
   late Future<List<Map<String, dynamic>>>? artworkDataList;
   late Future<String> museumDatas;
 
-
   @override
   void initState() {
     super.initState();
     museumDatas = getMuseum();
-    museumDatas.then((value){
-      print(value);
+    museumDatas.then((value) {
     });
     if (widget.museumData['id'] != null && widget.museumData['id'].isNotEmpty) {
       artworkDataList = getArtworksByMuseum(widget.museumData['id']);
     } else {
-      print("Museum ID is empty or null");
     }
-
   }
 
-    @override
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
@@ -55,13 +52,26 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
     // Called when the current route has been popped off, and the user returns to this route
     setState(() {
       museumDatas = getMuseum();
-      checkIfLiked(); // Check if the artist is liked again when coming back
     });
+  }
+
+  Future<String> getMuseum() async {
+    var snapshot = await FirebaseFirestore.instance
+        .collection('museums')
+        .where('name', isEqualTo: widget.museumData['name'])
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      DocumentSnapshot museum = snapshot.docs.first;
+      return museum.id;
+    } else {
+      return 'museumInfo';
+    }
   }
 
   Future<List<Map<String, dynamic>>> getArtworksByMuseum(String museumId) async {
     if (museumId.isEmpty) {
-      print('Museum ID is empty');
       return [];
     }
 
@@ -74,12 +84,10 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        print('No artworks found for museum');
         return [];
       }
 
       final artworks = snapshot.docs.map((doc) {
-        print('Artwork found: ${doc.data()}');
         return {
           'id': doc.id,
           ...doc.data() as Map<String, dynamic>
@@ -88,71 +96,8 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
 
       return artworks;
     } catch (error) {
-      print('Error fetching artworks: $error');
       return [];
     }
-  }
-
-  Future<bool> checkIfLiked() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-    String mid = '';
-    museumDatas.then((value){
-    mid = value;
-     });
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
-
-    if (doc.exists) {
-      List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
-
-      return favoriteMuseums.contains(mid);
-    }
-    return false;
-  }
-
-  Future<void> toggleFavorite(String museumId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
-
-    if (doc.exists) {
-      List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
-      if (favoriteMuseums.contains(museumId)) {
-        // Remove from favorites
-        await userRef.update({
-          'favoriteMuseums': FieldValue.arrayRemove([museumId])
-        });
-      } else {
-        // Add to favorites
-        await userRef.update({
-          'favoriteMuseums': FieldValue.arrayUnion([museumId])
-        });
-      }
-      setState(() {
-        
-      });
-    }
-  }
-
-
-  Future<String> getMuseum() async {
-    var snapshot = await FirebaseFirestore.instance
-          .collection('museums')
-          .where('name', isEqualTo: widget.museumData['name'])
-          .limit(1)
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        DocumentSnapshot museum = snapshot.docs.first;
-        print(museum.id);
-        return museum.id;
-      }else{
-        return 'museumInfo';
-      }
-      
   }
 
   @override
@@ -181,26 +126,19 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
                           softWrap: true,
                         ),
                       ),
-                      FutureBuilder<bool>(
-                                future: checkIfLiked(),
-                                
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return const Icon(Icons.favorite_border, color: Colors.red);
-                                  }
-                                  bool isLiked = snapshot.data ?? false;
-                                  return IconButton(
-                                    icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                    color: Colors.red,
-                                    onPressed: () {
-                                          museumDatas.then((value){
-                                          toggleFavorite(value);
-                                        });
-                                      
-                                    },
-                                  );
-                                },
-                              ),
+                      // ignore: unnecessary_null_comparison
+                      museumDatas != null ? FutureBuilder<String>(
+                        future: museumDatas,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Icon(Icons.favorite_border, color: Colors.red);
+                          }
+                          if (snapshot.hasError || !snapshot.hasData) {
+                            return const Icon(Icons.favorite_border, color: Colors.red);
+                          }
+                          return FavoriteButton(museumId: snapshot.data!);
+                        },
+                      ) : const Icon(Icons.favorite_border, color: Colors.red),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -222,13 +160,11 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
                     ),
                   ),
                   const SizedBox(height: 10),
-
-
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: artworkDataList,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: LoadingGif());
+                        return const Center(child: LoadingGif());
                       }
                       if (snapshot.hasError) {
                         return Center(child: Text('Failed to load artworks: ${snapshot.error}'));
@@ -244,7 +180,7 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
                         physics: const NeverScrollableScrollPhysics(), // Prevents scrolling within the GridView
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.8,  // Adjusted for better display
+                          childAspectRatio: 0.8, // Adjusted for better display
                         ),
                         itemCount: artworks.length,
                         itemBuilder: (context, index) {
@@ -273,7 +209,6 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
                       );
                     },
                   ),
-
                 ],
               ),
             ),
@@ -281,6 +216,74 @@ class _MuseumPageState extends State<MuseumPage> with RouteAware {
         ),
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: null),
+    );
+  }
+}
+
+class FavoriteButton extends StatefulWidget {
+  final String museumId;
+
+  const FavoriteButton({super.key, required this.museumId});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _FavoriteButtonState createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<FavoriteButton> {
+  bool isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfLiked();
+  }
+
+  Future<void> checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
+      setState(() {
+        isLiked = favoriteMuseums.contains(widget.museumId);
+      });
+    }
+  }
+
+  Future<void> toggleFavorite() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favoriteMuseums = doc.data()?['favoriteMuseums'] ?? [];
+      if (favoriteMuseums.contains(widget.museumId)) {
+        await userRef.update({
+          'favoriteMuseums': FieldValue.arrayRemove([widget.museumId])
+        });
+      } else {
+        await userRef.update({
+          'favoriteMuseums': FieldValue.arrayUnion([widget.museumId])
+        });
+      }
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+      color: Colors.red,
+      onPressed: toggleFavorite,
     );
   }
 }

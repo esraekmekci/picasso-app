@@ -13,13 +13,13 @@ class ArtDetailsPage extends StatefulWidget {
   const ArtDetailsPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ArtDetailsPageState createState() => _ArtDetailsPageState();
 }
 
 class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
   late PageController _pageController;
   late Future<List<Map<String, dynamic>>>? artworkDataList;
-  bool isLiked = false;
   final int _currentIndex = 1;
 
   @override
@@ -65,6 +65,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
 
         // Format the date
         DateTime publishDate = artworkInfo['publishdate']?.toDate();
+        // ignore: unnecessary_null_comparison
         String formattedDate = publishDate != null ? DateFormat('MMM d').format(publishDate) : 'Unknown';
 
         artworks.add({
@@ -106,46 +107,6 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
     return artworks.reversed.toList(); // Reverse the list to show today first
   }
 
-  Future<void> toggleFavorite(String artworkId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
-
-    if (doc.exists) {
-      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
-      if (favorites.contains(artworkId)) {
-        // Remove from favorites
-        await userRef.update({
-          'favorites': FieldValue.arrayRemove([artworkId])
-        });
-      } else {
-        // Add to favorites
-        await userRef.update({
-          'favorites': FieldValue.arrayUnion([artworkId])
-        });
-      }
-      setState(() {
-        // Refresh the page to update the favorite icon
-      });
-    }
-  }
-
-  Future<bool> checkIfLiked(String artworkId) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
-
-    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    final doc = await userRef.get();
-
-    if (doc.exists) {
-      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
-      return favorites.contains(artworkId);
-    }
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,10 +118,10 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
             return Center(child: LoadingGif());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Failed to load art details'));
+            return const Center(child: Text('Failed to load art details'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No Art for Today'));
+            return const Center(child: Text('No Art for Today'));
           }
 
           List<Map<String, dynamic>> artworks = snapshot.data!;
@@ -238,42 +199,40 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                               Row(
                                 children: [
                                   ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
-                                          foregroundColor: Colors.white, // Text color
-                                          elevation: 2,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        ),
-                                        onPressed: () => Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ArtistPage(
-                                              artistData: {
-                                                'id': data['artist']['id'],
-                                                'image': data['artist']['image'],
-                                                'name': data['artist']['name'],
-                                                'deathdate': data['artist']['deathdate'],
-                                                'birthdate': data['artist']['birthdate'],
-                                                'description': data['artist']['description']
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                        child: Text(data['artist']['name']),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(255, 27, 90, 29), // Background color
+                                      foregroundColor: Colors.white, // Text color
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        data['year']?.toString() ?? 'Unknown Year',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey,
+                                    onPressed: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ArtistPage(
+                                          artistData: {
+                                            'id': data['artist']['id'],
+                                            'image': data['artist']['image'],
+                                            'name': data['artist']['name'],
+                                            'deathdate': data['artist']['deathdate'],
+                                            'birthdate': data['artist']['birthdate'],
+                                            'description': data['artist']['description']
+                                          },
                                         ),
                                       ),
-                                    ],
+                                    ),
+                                    child: Text(data['artist']['name']),
                                   ),
-
-
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    data['year']?.toString() ?? 'Unknown Year',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 20),
                               Text(
                                 data['description'],
@@ -342,22 +301,7 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
                                 ),
                               ],
                             ),
-                            child: FutureBuilder<bool>(
-                              future: checkIfLiked(data['id']),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const Icon(Icons.favorite_border, color: Colors.red);
-                                }
-                                bool isLiked = snapshot.data ?? false;
-                                return IconButton(
-                                  icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
-                                  color: Colors.red,
-                                  onPressed: () {
-                                    toggleFavorite(data['id']);
-                                  },
-                                );
-                              },
-                            ),
+                            child: FavoriteButton(artworkId: data['id']),
                           ),
                         ),
                       ],
@@ -370,6 +314,75 @@ class _ArtDetailsPageState extends State<ArtDetailsPage> with RouteAware {
         },
       ),
       bottomNavigationBar: CustomBottomNavBar(currentIndex: _currentIndex),
+    );
+  }
+}
+
+class FavoriteButton extends StatefulWidget {
+  final String artworkId;
+
+  const FavoriteButton({Key? key, required this.artworkId}) : super(key: key);
+
+  @override
+  _FavoriteButtonState createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<FavoriteButton> {
+  bool isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfLiked();
+  }
+
+  Future<void> checkIfLiked() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+      setState(() {
+        isLiked = favorites.contains(widget.artworkId);
+      });
+    }
+  }
+
+  Future<void> toggleFavorite() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    final doc = await userRef.get();
+
+    if (doc.exists) {
+      List<dynamic> favorites = doc.data()?['favorites'] ?? [];
+      if (favorites.contains(widget.artworkId)) {
+        // Remove from favorites
+        await userRef.update({
+          'favorites': FieldValue.arrayRemove([widget.artworkId])
+        });
+      } else {
+        // Add to favorites
+        await userRef.update({
+          'favorites': FieldValue.arrayUnion([widget.artworkId])
+        });
+      }
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
+      color: Colors.red,
+      onPressed: toggleFavorite,
     );
   }
 }

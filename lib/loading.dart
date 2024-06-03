@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
 
 class LoadingGif extends StatelessWidget {
-  LoadingGif({super.key});
+  const LoadingGif({super.key});
 
   Future<Widget> _loadGif() async {
     final ByteData data = await rootBundle.load("assets/picaßo.gif");
@@ -28,7 +26,7 @@ class LoadingGif extends StatelessWidget {
             child: snapshot.data!,
           );
         } else {
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         }
       },
     );
