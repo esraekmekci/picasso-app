@@ -15,13 +15,16 @@ The app allows users to:
 
 ## Preview
 
-<img src="assets/daily.jpg" alt="Daily Page" width="300">
-<img src="assets/discover_movement.jpg" alt="Discover - Movements Page" width="300">
-
-<br><br>
-
-<img src="assets/fav_museum.jpg" alt="Favorites - Museums Page" width="300">
-<img src="assets/filter.jpg" alt="Filter Page" width="300">
+<table>
+  <tr>
+    <td><img src="assets/daily.jpg" alt="Daily Page" width="300"></td>
+    <td><img src="assets/discover_movement.jpg" alt="Discover - Movements Page" width="300"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/fav_museum.jpg" alt="Favorites - Museums Page" width="300"></td>
+    <td><img src="assets/filter.jpg" alt="Filter Page" width="300"></td>
+  </tr>
+</table>
 
 ## Installation
 
