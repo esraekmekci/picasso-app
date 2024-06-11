@@ -41,49 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAPFsYHpUlY3lObYK8E7NUGtHAmfeS9rBQ',
-    appId: '1:575277623254:web:8e3feb8aea8c424cad6677',
-    messagingSenderId: '575277623254',
-    projectId: 'picasso-app-8af58',
-    authDomain: 'picasso-app-8af58.firebaseapp.com',
-    storageBucket: 'picasso-app-8af58.appspot.com',
-    measurementId: 'G-CH2S3FED8L',
+    apiKey: //customize,
+    appId: //customize,
+    messagingSenderId: //customize,
+    projectId: //customize,
+    authDomain: //customize,
+    storageBucket: //customize,
+    measurementId: //customize,
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCiEI0ZQPRmuC_tzSucBKlUD_IzPus0_1w',
-    appId: '1:575277623254:android:d9f85c1ac597e99dad6677',
-    messagingSenderId: '575277623254',
-    projectId: 'picasso-app-8af58',
-    storageBucket: 'picasso-app-8af58.appspot.com',
+    apiKey: //customize,
+    appId: //customize,
+    messagingSenderId: //customize,
+    projectId: //customize,
+    storageBucket: //customize,
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCe71VHsaEieA9FOnJID5gjdKelvrHpjeQ',
-    appId: '1:575277623254:ios:5ec3bf004c1e9b6aad6677',
-    messagingSenderId: '575277623254',
-    projectId: 'picasso-app-8af58',
-    storageBucket: 'picasso-app-8af58.appspot.com',
-    iosBundleId: 'com.example.picasso',
+    apiKey: //customize,
+    appId: //customize,
+    messagingSenderId: //customize,
+    projectId: //customize,
+    storageBucket: //customize,
+    iosBundleId: //customize,
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCe71VHsaEieA9FOnJID5gjdKelvrHpjeQ',
-    appId: '1:575277623254:ios:5ec3bf004c1e9b6aad6677',
-    messagingSenderId: '575277623254',
-    projectId: 'picasso-app-8af58',
-    storageBucket: 'picasso-app-8af58.appspot.com',
-    iosBundleId: 'com.example.picasso',
+    apiKey: //customize,
+    appId: //customize,
+    messagingSenderId: //customize,
+    projectId: //customize,
+    storageBucket: //customize,
+    iosBundleId: //customize,
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAPFsYHpUlY3lObYK8E7NUGtHAmfeS9rBQ',
-    appId: '1:575277623254:web:8f1a6b2bbc934ff5ad6677',
-    messagingSenderId: '575277623254',
-    projectId: 'picasso-app-8af58',
-    authDomain: 'picasso-app-8af58.firebaseapp.com',
-    storageBucket: 'picasso-app-8af58.appspot.com',
-    measurementId: 'G-1X2BELFWX5',
+    apiKey: //customize,
+    appId: //customize,
+    messagingSenderId: //customize,
+    projectId: //customize,
+    authDomain: //customize,
+    storageBucket: //customize,
+    measurementId: //customize,
   );
 
 }
