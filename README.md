@@ -1,16 +1,55 @@
-# picasso
+# picaßo - daily art app
 
-A new Flutter project.
+## Introduction
 
-## Getting Started
+Picaßo is an innovative mobile application designed to offer users a daily dose of inspiration through notable artworks and their compelling narratives. Our mission is to make art accessible and enjoyable for everyone, regardless of their background or expertise.
 
-This project is a starting point for a Flutter application.
+The app allows users to:
 
-A few resources to get you started if this is your first Flutter project:
+* Discover a new piece of art each day.
+* Read about the story, historical context, and significance of the artwork.
+* Learn about the artist of the artwork, the prominent movements and the museum where it is currently located.
+* Favorite artworks, artists, movements and museums to save them for later.
+* Shuffle through artworks, artists, movements and museums to explore different pieces randomly.
+* Filter and search through the entire collection of them.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+To get started with Picaßo, follow these steps:
+
+### Prerequisites
+* Flutter SDK
+* Firebase account
+
+### Steps
+1. Clone the repository:
+
+```
+git clone https://github.com/your-username/picasso.git
+cd picasso
+```
+
+2. Install dependencies:
+
+```
+flutter pub get
+```
+
+3. Set up Firebase
+4. Run the app:
+
+```
+flutter run
+```
+
+## Usage
+Once the app is up and running, you can navigate through the different sections:
+  * Daily Page
+  * Favorites Page
+  * Discover Page
+
+Also you can download the apk of picaßo via [this link](https://file.io/E4XmhYIByA1L).
+
+---
+
+Thank you for checking out Picaßo! We hope you enjoy exploring the world of art with us. For any questions or feedback, feel free to open an issue or contact us.
