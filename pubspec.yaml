@@ -234,8 +234,10 @@ flutter:
     - assets/picaßo_icon.png
     - assets/frame_grey.png
     - assets/frame_amber.png
-
-
+    - assets/daily.jpg
+    - assets/discover_movement.jpg
+    - assets/fav_museum.jpg
+    - assets/filter.jpg
 
 
 

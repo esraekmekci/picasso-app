@@ -13,6 +13,16 @@ The app allows users to:
 * Shuffle through artworks, artists, movements and museums to explore different pieces randomly.
 * Filter and search through the entire collection of them.
 
+## Preview
+
+<img src="assets/daily.jpg" alt="Daily Page" width="300">
+<img src="assets/discover_movement.jpg" alt="Discover - Movements Page" width="300">
+
+<br><br>
+
+<img src="assets/fav_museum.jpg" alt="Favorites - Museums Page" width="300">
+<img src="assets/filter.jpg" alt="Filter Page" width="300">
+
 ## Installation
 
 To get started with Picaßo, follow these steps:
