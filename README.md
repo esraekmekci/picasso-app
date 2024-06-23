@@ -38,8 +38,7 @@ To get started with Picaßo, follow these steps:
 1. Clone the repository:
 
 ```
-git clone https://github.com/your-username/picasso.git
-cd picasso
+git clone https://github.com/esraekmekci/picasso-app.git
 ```
 
 2. Install dependencies:
